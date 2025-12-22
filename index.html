@@ -2438,11 +2438,12 @@
                 <button class="primary-btn" onclick="navigateTo('generator')">⚡ Start Generator</button>
             </div>
             <h3 style="font-size:16px; margin-bottom:20px;">Recent Creations</h3>
-            <div class="asset-grid">
-                <div class="asset-card"><img src="https://images.unsplash.com/photo-1611080626919-7cf5a9dbab5b?w=400" class="asset-img"><div class="asset-overlay"><div style="font-size:12px; font-weight:600; color:white;">Shea Hook</div></div></div>
-                <div class="asset-card"><img src="https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=400" class="asset-img"><div class="asset-overlay"><div style="font-size:12px; font-weight:600; color:white;">Promo</div></div></div>
-                <div class="asset-card"><img src="https://images.unsplash.com/photo-1556228453-efd6c1ff04f6?w=400" class="asset-img"><div class="asset-overlay"><div style="font-size:12px; font-weight:600; color:white;">Edu Fact</div></div></div>
-                <div class="asset-card"><img src="https://images.unsplash.com/photo-1512413914633-b5043f4041ea?w=400" class="asset-img"><div class="asset-overlay"><div style="font-size:12px; font-weight:600; color:white;">Video Intro</div></div></div>
+            <div class="asset-grid" id="recentCreationsGrid">
+                <div style="grid-column: 1/-1; text-align:center; padding:60px 20px; color:#666;">
+                    <div style="font-size:48px; margin-bottom:15px;">🎨</div>
+                    <div style="font-size:16px; margin-bottom:8px;">No creations yet</div>
+                    <div style="font-size:13px; color:#555;">Generate your first campaign to see assets here</div>
+                </div>
             </div>
         </div>
 
@@ -2464,76 +2465,11 @@
                     </div>
                 </div>
 
-                <div class="campaign-grid">
+                <div class="campaign-grid" id="campaignsGrid">
                     <div class="campaign-card new" onclick="navigateTo('generator')">
                         <div class="plus-icon">+</div>
                         <div style="font-weight:600; color:white;">Create New Campaign</div>
                         <div style="font-size:12px; color:#888; margin-top:5px;">Start a new batch of assets</div>
-                    </div>
-
-                    <div class="campaign-card" onclick="openCampaignDetail('shea-butter')">
-                        <div class="camp-header">
-                            <div class="camp-icon">🛍️</div>
-                            <div class="camp-menu" onclick="event.stopPropagation();">⋮</div>
-                        </div>
-                        <div class="camp-title">Black Friday - Shea Butter</div>
-                        <div class="camp-meta">
-                            <div class="status-dot status-success"></div>
-                            <span>Completed • Nov 24</span>
-                        </div>
-                        <div class="preview-stack">
-                            <img src="https://images.unsplash.com/photo-1611080626919-7cf5a9dbab5b?w=100" class="preview-img">
-                            <img src="https://images.unsplash.com/photo-1556228552-523de509228a?w=100" class="preview-img">
-                            <img src="https://images.unsplash.com/photo-1571781565036-d3f7595ca3f7?w=100" class="preview-img">
-                            <div class="preview-count">+12</div>
-                        </div>
-                        <div class="camp-stats">
-                            <div class="stat-badge">15 Assets</div>
-                            <div class="stat-badge">492MB</div>
-                        </div>
-                    </div>
-
-                    <div class="campaign-card" onclick="openCampaignDetail('serum-launch')">
-                        <div class="camp-header">
-                            <div class="camp-icon">🎥</div>
-                            <div class="camp-menu" onclick="event.stopPropagation();">⋮</div>
-                        </div>
-                        <div class="camp-title">New Serum Launch</div>
-                        <div class="camp-meta">
-                            <div class="status-dot status-success"></div>
-                            <span>Completed • Oct 12</span>
-                        </div>
-                        <div class="preview-stack">
-                            <img src="https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=100" class="preview-img">
-                            <img src="https://images.unsplash.com/photo-1512413914633-b5043f4041ea?w=100" class="preview-img">
-                            <div class="preview-count">+8</div>
-                        </div>
-                        <div class="camp-stats">
-                            <div class="stat-badge">10 Videos</div>
-                            <div class="stat-badge">1.2GB</div>
-                        </div>
-                    </div>
-
-                    <div class="campaign-card" style="border-color:#f1c40f;">
-                        <div class="camp-header">
-                            <div class="camp-icon">⚡</div>
-                            <div class="camp-menu" onclick="event.stopPropagation();">⋮</div>
-                        </div>
-                        <div class="camp-title">Holiday Promo Test</div>
-                        <div class="camp-meta">
-                            <div class="status-dot status-pending"></div>
-                            <span style="color:var(--pending);">Generating...</span>
-                        </div>
-                        <div style="margin-top:20px;">
-                            <div style="font-size:11px; color:#aaa; margin-bottom:5px;">Processing (45%)</div>
-                            <div style="height:6px; background:#333; border-radius:3px; overflow:hidden;">
-                                <div style="width:45%; height:100%; background:var(--pending);"></div>
-                            </div>
-                        </div>
-                        <div class="camp-stats">
-                            <div class="stat-badge">-- Assets</div>
-                            <div class="stat-badge">-- MB</div>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -3320,18 +3256,11 @@
                 <div id="inventorySidebar" class="inventory-drawer">
                     <div class="sidebar-content">
                         <h3 style="color:white; margin-bottom:15px;">🛍️ Your Inventory</h3>
-                        <div class="product-list">
-                            <div class="p-item" onclick="fillForm('Cosmic Face Serum', 'Hydrates dry skin.', '50', 'ml')">
-                                <img src="https://source.unsplash.com/random/100x100/?cosmetic">
-                                <div class="p-info"><h4>Cosmic Serum</h4><span>50ml • 142 left</span></div>
-                            </div>
-                            <div class="p-item" onclick="fillForm('Nebula Lamp', 'Galaxy vibes.', '10', 'in')">
-                                <img src="https://source.unsplash.com/random/100x100/?lamp">
-                                <div class="p-info"><h4>Nebula Lamp</h4><span>10in • 56 left</span></div>
-                            </div>
-                            <div class="p-item" onclick="fillForm('Orbit Watch', 'Fitness tracking.', '', '')">
-                                <img src="https://source.unsplash.com/random/100x100/?watch">
-                                <div class="p-info"><h4>Orbit Watch</h4><span>One Size • 89 left</span></div>
+                        <div class="product-list" id="inventoryList">
+                            <div style="text-align:center; padding:30px 15px; color:#666;">
+                                <div style="font-size:32px; margin-bottom:10px;">📦</div>
+                                <div style="font-size:13px; margin-bottom:5px;">No products yet</div>
+                                <div style="font-size:11px; color:#555;">Connect Shopify or TikTok Shop to sync products</div>
                             </div>
                         </div>
                     </div>
@@ -3620,48 +3549,47 @@
                     <div class="content-grid">
                         <div class="result-card" onclick="toggleResultSelect(this)">
                             <div class="result-select"></div>
-                            <div class="score-badge"><span class="score-high">92</span> Score</div>
-                            <div class="result-image" style="background-image: url('https://images.unsplash.com/photo-1611080626919-7cf5a9dbab5b?q=80&w=800');">
-                                <div class="overlay-text" style="top:15%;">
-                                    <div class="headline">The Ultimate<br>Skin Luxury</div>
-                                    <div class="subhead">PURE, ORGANIC SHEA</div>
+                            <div class="result-image" style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); display:flex; align-items:center; justify-content:center;">
+                                <div class="overlay-text" style="position:relative; top:auto;">
+                                    <div class="headline">Generating...</div>
+                                    <div class="subhead">Hook Image 1</div>
                                 </div>
                             </div>
                             <div class="result-actions">
-                                <div class="result-tool" onclick="event.stopPropagation(); openModal('editTextModal')"><span class="result-tool-icon">✏️</span>Edit Text</div>
-                                <div class="result-tool" onclick="event.stopPropagation(); openModal('regenerateModal')"><span class="result-tool-icon">🔄</span>Revise</div>
-                                <div class="result-tool" onclick="event.stopPropagation(); showToast('success', 'Downloaded', 'Image saved to Gallery')"><span class="result-tool-icon">⬇️</span>Save</div>
-                                <div class="result-tool" onclick="event.stopPropagation(); showToast('info', 'Copied', 'Image copied to clipboard')"><span class="result-tool-icon">📋</span>Copy</div>
+                                <div class="result-tool"><span class="result-tool-icon">✏️</span>Edit</div>
+                                <div class="result-tool"><span class="result-tool-icon">🔄</span>Revise</div>
+                                <div class="result-tool"><span class="result-tool-icon">⬇️</span>Save</div>
+                                <div class="result-tool"><span class="result-tool-icon">📋</span>Copy</div>
                             </div>
                         </div>
                         <div class="result-card" onclick="toggleResultSelect(this)">
                             <div class="result-select"></div>
-                            <div class="score-badge"><span class="score-high">88</span> Score</div>
-                            <div class="result-image" style="background-image: url('https://images.unsplash.com/photo-1556228552-523de509228a?q=80&w=800');">
-                                <div class="overlay-text" style="bottom:25%;">
-                                    <div class="headline">Raw &<br>Unrefined</div>
+                            <div class="result-image" style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); display:flex; align-items:center; justify-content:center;">
+                                <div class="overlay-text" style="position:relative; top:auto;">
+                                    <div class="headline">Generating...</div>
+                                    <div class="subhead">Hook Image 2</div>
                                 </div>
                             </div>
                             <div class="result-actions">
-                                <div class="result-tool" onclick="event.stopPropagation();"><span class="result-tool-icon">✏️</span>Edit Text</div>
-                                <div class="result-tool" onclick="event.stopPropagation();"><span class="result-tool-icon">🔄</span>Revise</div>
-                                <div class="result-tool" onclick="event.stopPropagation();"><span class="result-tool-icon">⬇️</span>Save</div>
-                                <div class="result-tool" onclick="event.stopPropagation();"><span class="result-tool-icon">📋</span>Copy</div>
+                                <div class="result-tool"><span class="result-tool-icon">✏️</span>Edit</div>
+                                <div class="result-tool"><span class="result-tool-icon">🔄</span>Revise</div>
+                                <div class="result-tool"><span class="result-tool-icon">⬇️</span>Save</div>
+                                <div class="result-tool"><span class="result-tool-icon">📋</span>Copy</div>
                             </div>
                         </div>
                         <div class="result-card" onclick="toggleResultSelect(this)">
                             <div class="result-select"></div>
-                            <div class="score-badge"><span class="score-med">76</span> Score</div>
-                            <div class="result-image" style="background-image: url('https://images.unsplash.com/photo-1571781565036-d3f7595ca3f7?q=80&w=800');">
-                                <div class="overlay-text" style="top:40%;">
-                                    <div class="headline" style="color:#333; text-shadow:none;">Glow Up</div>
+                            <div class="result-image" style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); display:flex; align-items:center; justify-content:center;">
+                                <div class="overlay-text" style="position:relative; top:auto;">
+                                    <div class="headline">Generating...</div>
+                                    <div class="subhead">Hook Image 3</div>
                                 </div>
                             </div>
                             <div class="result-actions">
-                                <div class="result-tool" onclick="event.stopPropagation();"><span class="result-tool-icon">✏️</span>Edit Text</div>
-                                <div class="result-tool" onclick="event.stopPropagation();"><span class="result-tool-icon">🔄</span>Revise</div>
-                                <div class="result-tool" onclick="event.stopPropagation();"><span class="result-tool-icon">⬇️</span>Save</div>
-                                <div class="result-tool" onclick="event.stopPropagation();"><span class="result-tool-icon">📋</span>Copy</div>
+                                <div class="result-tool"><span class="result-tool-icon">✏️</span>Edit</div>
+                                <div class="result-tool"><span class="result-tool-icon">🔄</span>Revise</div>
+                                <div class="result-tool"><span class="result-tool-icon">⬇️</span>Save</div>
+                                <div class="result-tool"><span class="result-tool-icon">📋</span>Copy</div>
                             </div>
                         </div>
                     </div>
@@ -3682,49 +3610,47 @@
                     <div class="content-grid">
                         <div class="result-card" onclick="toggleResultSelect(this)">
                             <div class="result-select"></div>
-                            <div class="score-badge"><span class="score-high">94</span> Score</div>
-                            <div class="result-image" style="background-image: url('https://images.unsplash.com/photo-1620916566398-39f1143ab7be?q=80&w=800');">
-                                <div class="overlay-text" style="top:10%;">
-                                    <div class="headline">50% OFF</div>
-                                    <div class="subhead">LIMITED TIME DEAL</div>
+                            <div class="result-image" style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); display:flex; align-items:center; justify-content:center;">
+                                <div class="overlay-text" style="position:relative; top:auto;">
+                                    <div class="headline">Generating...</div>
+                                    <div class="subhead">Offer Image 1</div>
                                 </div>
                             </div>
                             <div class="result-actions">
-                                <div class="result-tool" onclick="event.stopPropagation();"><span class="result-tool-icon">✏️</span>Edit Text</div>
-                                <div class="result-tool" onclick="event.stopPropagation();"><span class="result-tool-icon">🔄</span>Revise</div>
-                                <div class="result-tool" onclick="event.stopPropagation();"><span class="result-tool-icon">⬇️</span>Save</div>
-                                <div class="result-tool" onclick="event.stopPropagation();"><span class="result-tool-icon">📋</span>Copy</div>
+                                <div class="result-tool"><span class="result-tool-icon">✏️</span>Edit</div>
+                                <div class="result-tool"><span class="result-tool-icon">🔄</span>Revise</div>
+                                <div class="result-tool"><span class="result-tool-icon">⬇️</span>Save</div>
+                                <div class="result-tool"><span class="result-tool-icon">📋</span>Copy</div>
                             </div>
                         </div>
                         <div class="result-card" onclick="toggleResultSelect(this)">
                             <div class="result-select"></div>
-                            <div class="score-badge"><span class="score-high">89</span> Score</div>
-                            <div class="result-image" style="background-image: url('https://images.unsplash.com/photo-1608248597279-f99d160bfbc8?q=80&w=800');">
-                                <div class="overlay-text" style="bottom:15%;">
-                                    <div class="headline">Buy 1 Get 1</div>
-                                    <div class="subhead">FREE SHIPPING</div>
+                            <div class="result-image" style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); display:flex; align-items:center; justify-content:center;">
+                                <div class="overlay-text" style="position:relative; top:auto;">
+                                    <div class="headline">Generating...</div>
+                                    <div class="subhead">Offer Image 2</div>
                                 </div>
                             </div>
                             <div class="result-actions">
-                                <div class="result-tool" onclick="event.stopPropagation();"><span class="result-tool-icon">✏️</span>Edit Text</div>
-                                <div class="result-tool" onclick="event.stopPropagation();"><span class="result-tool-icon">🔄</span>Revise</div>
-                                <div class="result-tool" onclick="event.stopPropagation();"><span class="result-tool-icon">⬇️</span>Save</div>
-                                <div class="result-tool" onclick="event.stopPropagation();"><span class="result-tool-icon">📋</span>Copy</div>
+                                <div class="result-tool"><span class="result-tool-icon">✏️</span>Edit</div>
+                                <div class="result-tool"><span class="result-tool-icon">🔄</span>Revise</div>
+                                <div class="result-tool"><span class="result-tool-icon">⬇️</span>Save</div>
+                                <div class="result-tool"><span class="result-tool-icon">📋</span>Copy</div>
                             </div>
                         </div>
                         <div class="result-card" onclick="toggleResultSelect(this)">
                             <div class="result-select"></div>
-                            <div class="score-badge"><span class="score-med">81</span> Score</div>
-                            <div class="result-image" style="background-image: url('https://images.unsplash.com/photo-1556228720-1957be83f315?q=80&w=800');">
-                                <div class="overlay-text" style="top:30%;">
-                                    <div class="headline">Bundle & Save</div>
+                            <div class="result-image" style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); display:flex; align-items:center; justify-content:center;">
+                                <div class="overlay-text" style="position:relative; top:auto;">
+                                    <div class="headline">Generating...</div>
+                                    <div class="subhead">Offer Image 3</div>
                                 </div>
                             </div>
                             <div class="result-actions">
-                                <div class="result-tool" onclick="event.stopPropagation();"><span class="result-tool-icon">✏️</span>Edit Text</div>
-                                <div class="result-tool" onclick="event.stopPropagation();"><span class="result-tool-icon">🔄</span>Revise</div>
-                                <div class="result-tool" onclick="event.stopPropagation();"><span class="result-tool-icon">⬇️</span>Save</div>
-                                <div class="result-tool" onclick="event.stopPropagation();"><span class="result-tool-icon">📋</span>Copy</div>
+                                <div class="result-tool"><span class="result-tool-icon">✏️</span>Edit</div>
+                                <div class="result-tool"><span class="result-tool-icon">🔄</span>Revise</div>
+                                <div class="result-tool"><span class="result-tool-icon">⬇️</span>Save</div>
+                                <div class="result-tool"><span class="result-tool-icon">📋</span>Copy</div>
                             </div>
                         </div>
                     </div>
@@ -3745,56 +3671,47 @@
                     <div class="content-grid">
                         <div class="result-card" onclick="toggleResultSelect(this)">
                             <div class="result-select"></div>
-                            <div class="score-badge"><span class="score-high">91</span> Score</div>
-                            <div class="result-image" style="background-image: url('https://images.unsplash.com/photo-1556228453-efd6c1ff04f6?q=80&w=800');">
-                                <div class="overlay-text" style="top:10%; align-items:flex-start;">
-                                    <div class="subhead" style="margin-bottom:8px;">WHY IT WORKS</div>
-                                    <div class="pointer-list">
-                                        <div class="pointer-item"><div class="pointer-dot"></div>Rich Vitamin E</div>
-                                        <div class="pointer-item"><div class="pointer-dot"></div>Non-Greasy Formula</div>
-                                        <div class="pointer-item"><div class="pointer-dot"></div>24hr Hydration</div>
-                                    </div>
+                            <div class="result-image" style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); display:flex; align-items:center; justify-content:center;">
+                                <div class="overlay-text" style="position:relative; top:auto;">
+                                    <div class="headline">Generating...</div>
+                                    <div class="subhead">Educational 1</div>
                                 </div>
                             </div>
                             <div class="result-actions">
-                                <div class="result-tool" onclick="event.stopPropagation();"><span class="result-tool-icon">✏️</span>Edit Text</div>
-                                <div class="result-tool" onclick="event.stopPropagation();"><span class="result-tool-icon">🔄</span>Revise</div>
-                                <div class="result-tool" onclick="event.stopPropagation();"><span class="result-tool-icon">⬇️</span>Save</div>
-                                <div class="result-tool" onclick="event.stopPropagation();"><span class="result-tool-icon">📋</span>Copy</div>
+                                <div class="result-tool"><span class="result-tool-icon">✏️</span>Edit</div>
+                                <div class="result-tool"><span class="result-tool-icon">🔄</span>Revise</div>
+                                <div class="result-tool"><span class="result-tool-icon">⬇️</span>Save</div>
+                                <div class="result-tool"><span class="result-tool-icon">📋</span>Copy</div>
                             </div>
                         </div>
                         <div class="result-card" onclick="toggleResultSelect(this)">
                             <div class="result-select"></div>
-                            <div class="score-badge"><span class="score-high">87</span> Score</div>
-                            <div class="result-image" style="background-image: url('https://images.unsplash.com/photo-1615397349754-cfa2066a298e?q=80&w=800');">
-                                <div class="overlay-text" style="bottom:15%;">
-                                    <div class="info-block">
-                                        <div class="info-title">DID YOU KNOW?</div>
-                                        Unrefined shea butter retains 90% more vitamins than processed alternatives, giving your skin a natural barrier.
-                                    </div>
+                            <div class="result-image" style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); display:flex; align-items:center; justify-content:center;">
+                                <div class="overlay-text" style="position:relative; top:auto;">
+                                    <div class="headline">Generating...</div>
+                                    <div class="subhead">Educational 2</div>
                                 </div>
                             </div>
                             <div class="result-actions">
-                                <div class="result-tool" onclick="event.stopPropagation();"><span class="result-tool-icon">✏️</span>Edit Text</div>
-                                <div class="result-tool" onclick="event.stopPropagation();"><span class="result-tool-icon">🔄</span>Revise</div>
-                                <div class="result-tool" onclick="event.stopPropagation();"><span class="result-tool-icon">⬇️</span>Save</div>
-                                <div class="result-tool" onclick="event.stopPropagation();"><span class="result-tool-icon">📋</span>Copy</div>
+                                <div class="result-tool"><span class="result-tool-icon">✏️</span>Edit</div>
+                                <div class="result-tool"><span class="result-tool-icon">🔄</span>Revise</div>
+                                <div class="result-tool"><span class="result-tool-icon">⬇️</span>Save</div>
+                                <div class="result-tool"><span class="result-tool-icon">📋</span>Copy</div>
                             </div>
                         </div>
                         <div class="result-card" onclick="toggleResultSelect(this)">
                             <div class="result-select"></div>
-                            <div class="score-badge"><span class="score-med">79</span> Score</div>
-                            <div class="result-image" style="background-image: url('https://images.unsplash.com/photo-1570194065650-d99fb4b8ccb0?q=80&w=800');">
-                                <div class="overlay-text" style="top:40%;">
-                                    <div class="headline" style="font-size:20px;">100% Organic</div>
-                                    <div class="subhead">NO CHEMICALS</div>
+                            <div class="result-image" style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); display:flex; align-items:center; justify-content:center;">
+                                <div class="overlay-text" style="position:relative; top:auto;">
+                                    <div class="headline">Generating...</div>
+                                    <div class="subhead">Educational 3</div>
                                 </div>
                             </div>
                             <div class="result-actions">
-                                <div class="result-tool" onclick="event.stopPropagation();"><span class="result-tool-icon">✏️</span>Edit Text</div>
-                                <div class="result-tool" onclick="event.stopPropagation();"><span class="result-tool-icon">🔄</span>Revise</div>
-                                <div class="result-tool" onclick="event.stopPropagation();"><span class="result-tool-icon">⬇️</span>Save</div>
-                                <div class="result-tool" onclick="event.stopPropagation();"><span class="result-tool-icon">📋</span>Copy</div>
+                                <div class="result-tool"><span class="result-tool-icon">✏️</span>Edit</div>
+                                <div class="result-tool"><span class="result-tool-icon">🔄</span>Revise</div>
+                                <div class="result-tool"><span class="result-tool-icon">⬇️</span>Save</div>
+                                <div class="result-tool"><span class="result-tool-icon">📋</span>Copy</div>
                             </div>
                         </div>
                     </div>
@@ -3805,49 +3722,18 @@
                     <div class="zone-header">
                         <div class="zone-title video-color">
                             <span>🎥</span> ZONE 4: MOTION
-                            <span style="font-size:12px; color:#888; font-weight:400; margin-left:10px;">(5 Videos)</span>
+                            <span style="font-size:12px; color:#888; font-weight:400; margin-left:10px;">(Videos)</span>
                         </div>
                         <div class="zone-actions">
-                            <button class="zone-action-btn" onclick="openModal('scriptEditorModal')"><span>📝</span> Edit Script</button>
-                            <button class="zone-action-btn"><span>☐</span> Select All</button>
-                            <button class="zone-action-btn"><span>🔄</span> Regenerate Zone</button>
+                            <button class="zone-action-btn" disabled style="opacity:0.5;"><span>📝</span> Edit Script</button>
+                            <button class="zone-action-btn" disabled style="opacity:0.5;"><span>🔄</span> Regenerate</button>
                         </div>
                     </div>
-                    <div class="video-grid">
-                        <div class="video-result-card" style="background-image:url('https://images.unsplash.com/photo-1512413914633-b5043f4041ea?w=400');" onclick="openVideoPlayer('AI Avatar (Hook)', 'https://images.unsplash.com/photo-1512413914633-b5043f4041ea?w=400')">
-                            <div class="play-overlay"><div class="play-icon">▶</div></div>
-                            <div class="video-info">
-                                <div class="video-label">AI Avatar (Hook)</div>
-                                <div class="video-duration">0:15 • 1080x1920</div>
-                            </div>
-                        </div>
-                        <div class="video-result-card" style="background-image:url('https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400');" onclick="openVideoPlayer('AI Avatar (Alt)', 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400')">
-                            <div class="play-overlay"><div class="play-icon">▶</div></div>
-                            <div class="video-info">
-                                <div class="video-label">AI Avatar (Alt)</div>
-                                <div class="video-duration">0:12 • 1080x1920</div>
-                            </div>
-                        </div>
-                        <div class="video-result-card" style="background-image:url('https://images.unsplash.com/photo-1616401784845-180882ba9ba8?w=400');" onclick="openVideoPlayer('Product B-Roll 1', 'https://images.unsplash.com/photo-1616401784845-180882ba9ba8?w=400')">
-                            <div class="play-overlay"><div class="play-icon">▶</div></div>
-                            <div class="video-info">
-                                <div class="video-label">Product B-Roll 1</div>
-                                <div class="video-duration">0:08 • 1080x1920</div>
-                            </div>
-                        </div>
-                        <div class="video-result-card" style="background-image:url('https://images.unsplash.com/photo-1556228552-523de509228a?w=400');" onclick="openVideoPlayer('Product B-Roll 2', 'https://images.unsplash.com/photo-1556228552-523de509228a?w=400')">
-                            <div class="play-overlay"><div class="play-icon">▶</div></div>
-                            <div class="video-info">
-                                <div class="video-label">Product B-Roll 2</div>
-                                <div class="video-duration">0:10 • 1080x1920</div>
-                            </div>
-                        </div>
-                        <div class="video-result-card" style="background-image:url('https://images.unsplash.com/photo-1550684848-fac1c5b4e853?w=400');" onclick="openVideoPlayer('Kinetic Text', 'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?w=400')">
-                            <div class="play-overlay"><div class="play-icon">▶</div></div>
-                            <div class="video-info">
-                                <div class="video-label">Kinetic Text</div>
-                                <div class="video-duration">0:06 • 1080x1920</div>
-                            </div>
+                    <div class="video-grid" style="display:flex; align-items:center; justify-content:center; min-height:200px;">
+                        <div style="text-align:center; padding:40px; color:#666;">
+                            <div style="font-size:48px; margin-bottom:15px;">🎬</div>
+                            <div style="font-size:16px; margin-bottom:8px; color:#888;">Video Generation Coming Soon</div>
+                            <div style="font-size:13px; color:#555;">AI-powered video creatives will be available in the next update</div>
                         </div>
                     </div>
                 </div>
