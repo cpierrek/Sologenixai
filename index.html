@@ -6410,21 +6410,155 @@
             document.getElementById('result-zone-' + zone).scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
 
+        // OpenAI Image Generation
+        async function generateImage(prompt) {
+            try {
+                const response = await fetch('https://api.openai.com/v1/images/generations', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + OPENAI_API_KEY
+                    },
+                    body: JSON.stringify({
+                        model: 'dall-e-3',
+                        prompt: prompt,
+                        n: 1,
+                        size: '1024x1024',
+                        quality: 'standard'
+                    })
+                });
+                const data = await response.json();
+                if (data.error) {
+                    console.error('OpenAI Error:', data.error);
+                    return null;
+                }
+                return data.data[0].url;
+            } catch (error) {
+                console.error('Image generation failed:', error);
+                return null;
+            }
+        }
+
+        // Generate creative prompts based on type
+        function getCreativePrompt(type, productName, productDesc) {
+            const baseStyle = 'Professional product photography, high-end advertising style, clean background, studio lighting, 4K quality';
+
+            if (type === 'hook') {
+                return `${baseStyle}. Create an attention-grabbing advertisement image for "${productName}". ${productDesc}. Make it bold, eye-catching, with dramatic lighting and composition that stops scrolling. The product should be the hero, positioned prominently. Dark moody background with accent lighting. No text or words in the image.`;
+            } else if (type === 'educational') {
+                return `${baseStyle}. Create a clean, trustworthy product image for "${productName}". ${productDesc}. Minimalist composition showing the product clearly with soft, professional lighting. White or light neutral background. The image should convey quality and reliability. No text or words in the image.`;
+            } else if (type === 'offer') {
+                return `${baseStyle}. Create a premium promotional product image for "${productName}". ${productDesc}. Luxurious composition with the product as centerpiece. Add subtle sparkles or glow effects to convey value. Rich, elegant lighting. The image should make viewers feel they're getting something special. No text or words in the image.`;
+            }
+            return `${baseStyle}. Product photo of "${productName}". ${productDesc}. No text in image.`;
+        }
+
+        // Generate headlines based on type and product
+        function generateHeadlines(type, productName, productDesc) {
+            const headlines = {
+                hook: [
+                    { headline: 'STOP SCROLLING.', subhead: 'You need to see this.' },
+                    { headline: 'The Secret Is Out', subhead: productName.toUpperCase() },
+                    { headline: "Everyone's Talking\nAbout This", subhead: 'See why →' }
+                ],
+                educational: [
+                    { headline: 'Why It Works', subhead: '3 Key Benefits' },
+                    { headline: 'The Difference\nIs Clear', subhead: 'See the results' },
+                    { headline: 'Science-Backed', subhead: 'Proven Formula' }
+                ],
+                offer: [
+                    { headline: '50% OFF', subhead: 'LIMITED TIME ONLY' },
+                    { headline: 'FLASH SALE', subhead: 'Ends Tonight' },
+                    { headline: 'Bundle & Save', subhead: 'FREE SHIPPING' }
+                ]
+            };
+            return headlines[type] || headlines.hook;
+        }
+
+        // Update result card with generated image
+        function updateResultCard(zoneId, cardIndex, imageUrl, headline, subhead) {
+            const zone = document.getElementById('result-zone-' + zoneId);
+            if (!zone) return;
+            const cards = zone.querySelectorAll('.result-card');
+            if (cards[cardIndex]) {
+                const imgDiv = cards[cardIndex].querySelector('.result-image');
+                if (imgDiv && imageUrl) {
+                    imgDiv.style.backgroundImage = 'url(' + imageUrl + ')';
+                }
+                const overlayText = cards[cardIndex].querySelector('.overlay-text');
+                if (overlayText) {
+                    const headlineEl = overlayText.querySelector('.headline');
+                    const subheadEl = overlayText.querySelector('.subhead');
+                    if (headlineEl) headlineEl.innerHTML = headline.replace(/\n/g, '<br>');
+                    if (subheadEl) subheadEl.textContent = subhead;
+                }
+            }
+        }
+
+        // Store generated images for download
+        var generatedAssets = [];
+
         // Launch campaign and show results
-        function launchCampaign() {
-            const productName = document.getElementById('pName').value || 'Raw Shea Butter';
+        async function launchCampaign() {
+            const productName = document.getElementById('pName').value || 'My Product';
+            const productDesc = document.getElementById('pDesc').value || 'A great product';
+
             document.getElementById('resultsProductName').textContent = productName;
+            generatedAssets = [];
 
             // Show generating overlay
             document.getElementById('genOverlayTitle').textContent = 'Generating Content...';
-            document.getElementById('genOverlaySubtitle').textContent = 'Our AI is crafting your creatives';
+            document.getElementById('genOverlaySubtitle').textContent = 'AI is creating your Hook images (1/3)';
             document.getElementById('generatingOverlay').classList.add('active');
 
-            setTimeout(() => {
+            try {
+                // Generate 3 Hook images
+                const hookHeadlines = generateHeadlines('hook', productName, productDesc);
+                for (let i = 0; i < 3; i++) {
+                    document.getElementById('genOverlaySubtitle').textContent = 'Creating Hook image ' + (i + 1) + ' of 3...';
+                    const prompt = getCreativePrompt('hook', productName, productDesc);
+                    const imageUrl = await generateImage(prompt);
+                    if (imageUrl) {
+                        updateResultCard('hooks', i, imageUrl, hookHeadlines[i].headline, hookHeadlines[i].subhead);
+                        generatedAssets.push({ type: 'hook', url: imageUrl, headline: hookHeadlines[i].headline });
+                    }
+                }
+
+                // Generate 3 Offer images
+                document.getElementById('genOverlaySubtitle').textContent = 'AI is creating your Offer images (2/3)';
+                const offerHeadlines = generateHeadlines('offer', productName, productDesc);
+                for (let i = 0; i < 3; i++) {
+                    document.getElementById('genOverlaySubtitle').textContent = 'Creating Offer image ' + (i + 1) + ' of 3...';
+                    const prompt = getCreativePrompt('offer', productName, productDesc);
+                    const imageUrl = await generateImage(prompt);
+                    if (imageUrl) {
+                        updateResultCard('offers', i, imageUrl, offerHeadlines[i].headline, offerHeadlines[i].subhead);
+                        generatedAssets.push({ type: 'offer', url: imageUrl, headline: offerHeadlines[i].headline });
+                    }
+                }
+
+                // Generate 3 Educational images
+                document.getElementById('genOverlaySubtitle').textContent = 'AI is creating your Educational images (3/3)';
+                const eduHeadlines = generateHeadlines('educational', productName, productDesc);
+                for (let i = 0; i < 3; i++) {
+                    document.getElementById('genOverlaySubtitle').textContent = 'Creating Educational image ' + (i + 1) + ' of 3...';
+                    const prompt = getCreativePrompt('educational', productName, productDesc);
+                    const imageUrl = await generateImage(prompt);
+                    if (imageUrl) {
+                        updateResultCard('edu', i, imageUrl, eduHeadlines[i].headline, eduHeadlines[i].subhead);
+                        generatedAssets.push({ type: 'educational', url: imageUrl, headline: eduHeadlines[i].headline });
+                    }
+                }
+
                 document.getElementById('generatingOverlay').classList.remove('active');
                 navigateTo('results');
-                showToast('success', 'Campaign Generated!', '14 assets ready to review');
-            }, 3500);
+                showToast('success', 'Campaign Generated!', generatedAssets.length + ' images created with AI');
+
+            } catch (error) {
+                console.error('Campaign generation failed:', error);
+                document.getElementById('generatingOverlay').classList.remove('active');
+                showToast('error', 'Generation Failed', error.message || 'Please try again');
+            }
         }
 
         // ============ CAMPAIGN MODAL FUNCTIONS ============
@@ -7380,6 +7514,9 @@
         // Supabase Configuration
         var SUPABASE_URL = 'https://wdprfkcrhmvzwlgkncpa.supabase.co';
         var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndkcHJma2NyaG12endsZ2tuY3BhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYzNzE1NzQsImV4cCI6MjA4MTk0NzU3NH0.XJ5nTtv72S6_fkLppGrEoXQ_co_Bh02Q7rWKRUhKVIM';
+
+        // OpenAI Configuration
+        var OPENAI_API_KEY = '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';
 
         var supabaseClient = null;
         var authState = { isAuthenticated: false, user: null, session: null, loading: true, isResettingPassword: false };
