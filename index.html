@@ -1246,6 +1246,43 @@
         .offer-color { color: var(--primary-gold); }
         .edu-color { color: var(--primary-cyan); }
         .video-color { color: var(--primary-purple); }
+        .audio-color { color: #1DB954; }
+
+        /* Voiceover Cards */
+        .voiceover-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+        .voiceover-card {
+            background: rgba(20,20,30,0.8); border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px; padding: 20px; transition: 0.3s;
+        }
+        .voiceover-card:hover { border-color: #1DB954; }
+        .voice-select { margin-bottom: 15px; }
+        .voice-select label { font-size: 12px; color: #888; display: block; margin-bottom: 6px; }
+        .voice-select select {
+            width: 100%; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15);
+            color: white; padding: 10px 12px; border-radius: 8px; font-size: 13px;
+        }
+        .script-input { margin-bottom: 15px; }
+        .script-input label { font-size: 12px; color: #888; display: block; margin-bottom: 6px; }
+        .script-input textarea {
+            width: 100%; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15);
+            color: white; padding: 10px 12px; border-radius: 8px; font-size: 13px; resize: none; height: 80px;
+        }
+        .generate-voice-btn {
+            width: 100%; background: linear-gradient(90deg, #1DB954, #1ed760);
+            border: none; padding: 12px; border-radius: 8px; color: white; font-weight: 600;
+            cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.3s;
+        }
+        .generate-voice-btn:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(29,185,84,0.3); }
+        .generate-voice-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        .audio-player { margin-top: 15px; display: none; }
+        .audio-player.active { display: block; }
+        .audio-player audio { width: 100%; height: 40px; }
+        .audio-player-actions { display: flex; gap: 10px; margin-top: 10px; }
+        .audio-action-btn {
+            flex: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+            color: #aaa; padding: 8px; border-radius: 6px; font-size: 11px; cursor: pointer; transition: 0.3s;
+        }
+        .audio-action-btn:hover { background: rgba(255,255,255,0.1); color: white; }
 
         .zone-actions { display: flex; gap: 10px; }
         .zone-action-btn {
@@ -3724,11 +3761,109 @@
                     </div>
                 </div>
 
-                <!-- ZONE 4: VIDEOS -->
+                <!-- ZONE 4: VOICEOVERS -->
+                <div class="zone-section" id="result-zone-voiceovers">
+                    <div class="zone-header">
+                        <div class="zone-title audio-color">
+                            <span>🎙️</span> ZONE 4: VOICEOVERS
+                            <span style="font-size:12px; color:#888; font-weight:400; margin-left:10px;">(AI Narration)</span>
+                        </div>
+                    </div>
+                    <div class="voiceover-grid">
+                        <!-- Hook Voiceover -->
+                        <div class="voiceover-card" id="voiceover-hook">
+                            <div style="font-size:14px; font-weight:600; margin-bottom:12px; color:var(--primary-pink);">🛑 Hook Script</div>
+                            <div class="voice-select">
+                                <label>Voice</label>
+                                <select id="voiceSelect-hook">
+                                    <option value="EXAVITQu4vr4xnSDxMaL">Sarah (Female)</option>
+                                    <option value="ErXwobaYiN019PkySvjV">Antoni (Male)</option>
+                                    <option value="MF3mGyEYCl7XYWbV9V6O">Elli (Female)</option>
+                                    <option value="TxGEqnHWrfWFTfGW9XjX">Josh (Male)</option>
+                                    <option value="pNInz6obpgDQGcFmaJgB">Adam (Male)</option>
+                                </select>
+                            </div>
+                            <div class="script-input">
+                                <label>Script</label>
+                                <textarea id="voiceScript-hook" placeholder="Enter your hook script..."></textarea>
+                            </div>
+                            <button class="generate-voice-btn" onclick="generateVoiceover('hook')">
+                                <span>🎙️</span> Generate Voiceover
+                            </button>
+                            <div class="audio-player" id="audioPlayer-hook">
+                                <audio id="audio-hook" controls></audio>
+                                <div class="audio-player-actions">
+                                    <button class="audio-action-btn" onclick="downloadAudio('hook')">⬇️ Download</button>
+                                    <button class="audio-action-btn" onclick="generateVoiceover('hook')">🔄 Regenerate</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Offer Voiceover -->
+                        <div class="voiceover-card" id="voiceover-offer">
+                            <div style="font-size:14px; font-weight:600; margin-bottom:12px; color:var(--primary-gold);">💰 Offer Script</div>
+                            <div class="voice-select">
+                                <label>Voice</label>
+                                <select id="voiceSelect-offer">
+                                    <option value="EXAVITQu4vr4xnSDxMaL">Sarah (Female)</option>
+                                    <option value="ErXwobaYiN019PkySvjV">Antoni (Male)</option>
+                                    <option value="MF3mGyEYCl7XYWbV9V6O">Elli (Female)</option>
+                                    <option value="TxGEqnHWrfWFTfGW9XjX">Josh (Male)</option>
+                                    <option value="pNInz6obpgDQGcFmaJgB">Adam (Male)</option>
+                                </select>
+                            </div>
+                            <div class="script-input">
+                                <label>Script</label>
+                                <textarea id="voiceScript-offer" placeholder="Enter your offer script..."></textarea>
+                            </div>
+                            <button class="generate-voice-btn" onclick="generateVoiceover('offer')">
+                                <span>🎙️</span> Generate Voiceover
+                            </button>
+                            <div class="audio-player" id="audioPlayer-offer">
+                                <audio id="audio-offer" controls></audio>
+                                <div class="audio-player-actions">
+                                    <button class="audio-action-btn" onclick="downloadAudio('offer')">⬇️ Download</button>
+                                    <button class="audio-action-btn" onclick="generateVoiceover('offer')">🔄 Regenerate</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Educational Voiceover -->
+                        <div class="voiceover-card" id="voiceover-edu">
+                            <div style="font-size:14px; font-weight:600; margin-bottom:12px; color:var(--primary-cyan);">🧠 Educational Script</div>
+                            <div class="voice-select">
+                                <label>Voice</label>
+                                <select id="voiceSelect-edu">
+                                    <option value="EXAVITQu4vr4xnSDxMaL">Sarah (Female)</option>
+                                    <option value="ErXwobaYiN019PkySvjV">Antoni (Male)</option>
+                                    <option value="MF3mGyEYCl7XYWbV9V6O">Elli (Female)</option>
+                                    <option value="TxGEqnHWrfWFTfGW9XjX">Josh (Male)</option>
+                                    <option value="pNInz6obpgDQGcFmaJgB">Adam (Male)</option>
+                                </select>
+                            </div>
+                            <div class="script-input">
+                                <label>Script</label>
+                                <textarea id="voiceScript-edu" placeholder="Enter your educational script..."></textarea>
+                            </div>
+                            <button class="generate-voice-btn" onclick="generateVoiceover('edu')">
+                                <span>🎙️</span> Generate Voiceover
+                            </button>
+                            <div class="audio-player" id="audioPlayer-edu">
+                                <audio id="audio-edu" controls></audio>
+                                <div class="audio-player-actions">
+                                    <button class="audio-action-btn" onclick="downloadAudio('edu')">⬇️ Download</button>
+                                    <button class="audio-action-btn" onclick="generateVoiceover('edu')">🔄 Regenerate</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ZONE 5: VIDEOS -->
                 <div class="zone-section" id="result-zone-videos">
                     <div class="zone-header">
                         <div class="zone-title video-color">
-                            <span>🎥</span> ZONE 4: MOTION
+                            <span>🎥</span> ZONE 5: MOTION
                             <span style="font-size:12px; color:#888; font-weight:400; margin-left:10px;">(Videos)</span>
                         </div>
                         <div class="zone-actions">
@@ -6505,6 +6640,92 @@
                 document.getElementById('generatingOverlay').classList.remove('active');
                 showToast('error', 'Generation Failed', error.message || 'Please try again');
             }
+        }
+
+        // ============ VOICEOVER GENERATION ============
+        var generatedAudioData = {};
+
+        async function generateVoiceover(type) {
+            const scriptEl = document.getElementById('voiceScript-' + type);
+            const voiceSelect = document.getElementById('voiceSelect-' + type);
+            const btn = scriptEl.closest('.voiceover-card').querySelector('.generate-voice-btn');
+
+            const text = scriptEl.value.trim();
+            if (!text) {
+                showToast('error', 'Missing Script', 'Please enter a script to generate voiceover');
+                return;
+            }
+
+            const voiceId = voiceSelect.value;
+
+            // Disable button and show loading
+            btn.disabled = true;
+            btn.innerHTML = '<span class="auth-spinner"></span> Generating...';
+
+            try {
+                const response = await fetch('/api/generate-voice', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text: text, voiceId: voiceId })
+                });
+
+                const data = await response.json();
+
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
+                // Convert base64 to audio blob
+                const audioBlob = base64ToBlob(data.audioData, 'audio/mpeg');
+                const audioUrl = URL.createObjectURL(audioBlob);
+
+                // Store for download
+                generatedAudioData[type] = { blob: audioBlob, url: audioUrl };
+
+                // Update audio player
+                const audioEl = document.getElementById('audio-' + type);
+                audioEl.src = audioUrl;
+
+                // Show audio player
+                document.getElementById('audioPlayer-' + type).classList.add('active');
+
+                showToast('success', 'Voiceover Generated!', 'Your AI narration is ready');
+
+            } catch (error) {
+                console.error('Voiceover generation failed:', error);
+                showToast('error', 'Generation Failed', error.message || 'Please try again');
+            }
+
+            // Reset button
+            btn.disabled = false;
+            btn.innerHTML = '<span>🎙️</span> Generate Voiceover';
+        }
+
+        function base64ToBlob(base64, contentType) {
+            const byteCharacters = atob(base64);
+            const byteNumbers = new Array(byteCharacters.length);
+            for (let i = 0; i < byteCharacters.length; i++) {
+                byteNumbers[i] = byteCharacters.charCodeAt(i);
+            }
+            const byteArray = new Uint8Array(byteNumbers);
+            return new Blob([byteArray], { type: contentType });
+        }
+
+        function downloadAudio(type) {
+            const audioData = generatedAudioData[type];
+            if (!audioData) {
+                showToast('error', 'No Audio', 'Generate a voiceover first');
+                return;
+            }
+
+            const link = document.createElement('a');
+            link.href = audioData.url;
+            link.download = 'sologenix-' + type + '-voiceover.mp3';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            showToast('success', 'Downloaded', 'Audio saved to your device');
         }
 
         // ============ CAMPAIGN MODAL FUNCTIONS ============
