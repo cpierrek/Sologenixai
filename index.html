@@ -6031,7 +6031,6 @@
                 <h2 id="genOverlayTitle">Generating Content...</h2>
                 <p id="genOverlaySubtitle">Our AI is crafting your creatives</p>
             </div>
-            <div class="gen-progress"><div class="gen-progress-fill"></div></div>
         </div>
 
     </div>
@@ -6332,8 +6331,8 @@
             document.getElementById('result-zone-' + zone).scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
 
-        // Image Generation via Serverless Function
-        async function generateImage(prompt) {
+        // Image Generation via Serverless Function (with retry)
+        async function generateImage(prompt, retryCount = 0) {
             try {
                 const response = await fetch('/api/generate-image', {
                     method: 'POST',
@@ -6345,11 +6344,23 @@
                 const data = await response.json();
                 if (data.error) {
                     console.error('Generation Error:', data.error);
+                    // Retry once if failed
+                    if (retryCount < 1) {
+                        console.log('Retrying image generation...');
+                        await new Promise(r => setTimeout(r, 2000));
+                        return generateImage(prompt, retryCount + 1);
+                    }
                     return null;
                 }
                 return data.imageUrl;
             } catch (error) {
                 console.error('Image generation failed:', error);
+                // Retry once if failed
+                if (retryCount < 1) {
+                    console.log('Retrying image generation...');
+                    await new Promise(r => setTimeout(r, 2000));
+                    return generateImage(prompt, retryCount + 1);
+                }
                 return null;
             }
         }
