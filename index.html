@@ -3864,19 +3864,72 @@
                     <div class="zone-header">
                         <div class="zone-title video-color">
                             <span>🎥</span> ZONE 5: MOTION
-                            <span style="font-size:12px; color:#888; font-weight:400; margin-left:10px;">(Videos)</span>
-                        </div>
-                        <div class="zone-actions">
-                            <button class="zone-action-btn" disabled style="opacity:0.5;"><span>📝</span> Edit Script</button>
-                            <button class="zone-action-btn" disabled style="opacity:0.5;"><span>🔄</span> Regenerate</button>
+                            <span style="font-size:12px; color:#888; font-weight:400; margin-left:10px;">(AI Videos)</span>
                         </div>
                     </div>
-                    <div class="video-grid" style="display:flex; align-items:center; justify-content:center; min-height:200px;">
-                        <div style="text-align:center; padding:40px; color:#666;">
-                            <div style="font-size:48px; margin-bottom:15px;">🎬</div>
-                            <div style="font-size:16px; margin-bottom:8px; color:#888;">Video Generation Coming Soon</div>
-                            <div style="font-size:13px; color:#555;">AI-powered video creatives will be available in the next update</div>
+                    <div class="video-grid" style="display:grid; grid-template-columns: repeat(3, 1fr); gap:20px;">
+                        <!-- Hook Video -->
+                        <div class="video-card" id="video-card-hook" style="background:rgba(20,20,30,0.8); border:1px solid rgba(255,255,255,0.1); border-radius:12px; overflow:hidden;">
+                            <div style="padding:15px; border-bottom:1px solid rgba(255,255,255,0.1);">
+                                <div style="font-size:14px; font-weight:600; color:var(--primary-pink);">🛑 Hook Video</div>
+                                <div style="font-size:11px; color:#666; margin-top:4px;">5 second attention grabber</div>
+                            </div>
+                            <div class="video-preview" id="videoPreview-hook" style="aspect-ratio:16/9; background:#0a0a15; display:flex; align-items:center; justify-content:center;">
+                                <div id="videoPlaceholder-hook" style="text-align:center; color:#444;">
+                                    <div style="font-size:36px; margin-bottom:8px;">🎬</div>
+                                    <div style="font-size:12px;">Generate video from image</div>
+                                </div>
+                                <video id="video-hook" style="width:100%; height:100%; display:none;" controls></video>
+                            </div>
+                            <div style="padding:15px;">
+                                <button class="generate-video-btn" onclick="generateVideo('hook')" style="width:100%; background:linear-gradient(90deg, var(--primary-purple), var(--primary-pink)); border:none; padding:12px; border-radius:8px; color:white; font-weight:600; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;">
+                                    <span>🎥</span> Generate Video
+                                </button>
+                            </div>
                         </div>
+
+                        <!-- Offer Video -->
+                        <div class="video-card" id="video-card-offer" style="background:rgba(20,20,30,0.8); border:1px solid rgba(255,255,255,0.1); border-radius:12px; overflow:hidden;">
+                            <div style="padding:15px; border-bottom:1px solid rgba(255,255,255,0.1);">
+                                <div style="font-size:14px; font-weight:600; color:var(--primary-gold);">💰 Offer Video</div>
+                                <div style="font-size:11px; color:#666; margin-top:4px;">5 second promo reel</div>
+                            </div>
+                            <div class="video-preview" id="videoPreview-offer" style="aspect-ratio:16/9; background:#0a0a15; display:flex; align-items:center; justify-content:center;">
+                                <div id="videoPlaceholder-offer" style="text-align:center; color:#444;">
+                                    <div style="font-size:36px; margin-bottom:8px;">🎬</div>
+                                    <div style="font-size:12px;">Generate video from image</div>
+                                </div>
+                                <video id="video-offer" style="width:100%; height:100%; display:none;" controls></video>
+                            </div>
+                            <div style="padding:15px;">
+                                <button class="generate-video-btn" onclick="generateVideo('offer')" style="width:100%; background:linear-gradient(90deg, var(--primary-purple), var(--primary-pink)); border:none; padding:12px; border-radius:8px; color:white; font-weight:600; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;">
+                                    <span>🎥</span> Generate Video
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Educational Video -->
+                        <div class="video-card" id="video-card-edu" style="background:rgba(20,20,30,0.8); border:1px solid rgba(255,255,255,0.1); border-radius:12px; overflow:hidden;">
+                            <div style="padding:15px; border-bottom:1px solid rgba(255,255,255,0.1);">
+                                <div style="font-size:14px; font-weight:600; color:var(--primary-cyan);">🧠 Educational Video</div>
+                                <div style="font-size:11px; color:#666; margin-top:4px;">5 second explainer</div>
+                            </div>
+                            <div class="video-preview" id="videoPreview-edu" style="aspect-ratio:16/9; background:#0a0a15; display:flex; align-items:center; justify-content:center;">
+                                <div id="videoPlaceholder-edu" style="text-align:center; color:#444;">
+                                    <div style="font-size:36px; margin-bottom:8px;">🎬</div>
+                                    <div style="font-size:12px;">Generate video from image</div>
+                                </div>
+                                <video id="video-edu" style="width:100%; height:100%; display:none;" controls></video>
+                            </div>
+                            <div style="padding:15px;">
+                                <button class="generate-video-btn" onclick="generateVideo('edu')" style="width:100%; background:linear-gradient(90deg, var(--primary-purple), var(--primary-pink)); border:none; padding:12px; border-radius:8px; color:white; font-weight:600; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;">
+                                    <span>🎥</span> Generate Video
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="margin-top:15px; padding:12px; background:rgba(188,19,254,0.1); border:1px solid rgba(188,19,254,0.2); border-radius:8px; font-size:12px; color:#aaa;">
+                        <strong style="color:var(--primary-purple);">Note:</strong> Video generation uses Runway AI and takes ~1-2 minutes per video. Videos are generated from your first image in each category.
                     </div>
                 </div>
             </div>
@@ -6631,9 +6684,33 @@
                     }
                 }
 
+                // Now generate AI scripts for voiceovers
+                document.getElementById('genOverlaySubtitle').innerHTML =
+                    '<span style="font-size:14px; color:#888;">Generating AI scripts for voiceovers...</span>';
+
+                // Generate scripts in parallel
+                const scriptTypes = ['hook', 'offer', 'edu'];
+                const scriptPromises = scriptTypes.map(type =>
+                    fetch('/api/generate-script', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ productName, productDesc, type })
+                    }).then(r => r.json()).catch(() => ({ script: '' }))
+                );
+
+                const scripts = await Promise.all(scriptPromises);
+
+                // Populate script textareas
+                scripts.forEach((data, index) => {
+                    const textarea = document.getElementById('voiceScript-' + scriptTypes[index]);
+                    if (textarea && data.script) {
+                        textarea.value = data.script;
+                    }
+                });
+
                 document.getElementById('generatingOverlay').classList.remove('active');
                 navigateTo('results');
-                showToast('success', 'Campaign Generated!', generatedAssets.length + ' images created with AI');
+                showToast('success', 'Campaign Generated!', generatedAssets.length + ' images + 3 AI scripts created');
 
             } catch (error) {
                 console.error('Campaign generation failed:', error);
@@ -6726,6 +6803,79 @@
             document.body.removeChild(link);
 
             showToast('success', 'Downloaded', 'Audio saved to your device');
+        }
+
+        // ============ VIDEO GENERATION ============
+        async function generateVideo(type) {
+            // Map type to zone id
+            const zoneMap = { hook: 'hooks', offer: 'offers', edu: 'edu' };
+            const zoneId = zoneMap[type];
+
+            // Get the first image URL from the corresponding zone
+            const zone = document.getElementById('result-zone-' + zoneId);
+            if (!zone) {
+                showToast('error', 'No Images', 'Generate images first before creating videos');
+                return;
+            }
+
+            const firstCard = zone.querySelector('.result-card .result-image');
+            if (!firstCard) {
+                showToast('error', 'No Images', 'Generate images first before creating videos');
+                return;
+            }
+
+            const bgImage = firstCard.style.backgroundImage;
+            const imageUrl = bgImage ? bgImage.replace(/url\(['"]?/, '').replace(/['"]?\)/, '') : null;
+
+            if (!imageUrl || imageUrl === 'none') {
+                showToast('error', 'No Images', 'Generate images first before creating videos');
+                return;
+            }
+
+            const productName = document.getElementById('resultsProductName').textContent || 'Product';
+            const btn = document.querySelector('#video-card-' + type + ' .generate-video-btn');
+
+            // Disable button and show loading
+            btn.disabled = true;
+            btn.innerHTML = '<span class="auth-spinner"></span> Generating (~1-2 min)...';
+
+            // Show loading in preview
+            const placeholder = document.getElementById('videoPlaceholder-' + type);
+            placeholder.innerHTML = '<div class="auth-spinner" style="width:40px; height:40px;"></div><div style="margin-top:15px; font-size:12px;">Creating your video...</div>';
+
+            try {
+                const response = await fetch('/api/generate-video', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        prompt: 'Cinematic product advertisement for ' + productName + ', smooth camera movement, professional lighting, high quality',
+                        imageUrl: imageUrl
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
+                // Show video
+                const videoEl = document.getElementById('video-' + type);
+                videoEl.src = data.videoUrl;
+                videoEl.style.display = 'block';
+                placeholder.style.display = 'none';
+
+                showToast('success', 'Video Generated!', 'Your AI video is ready');
+
+            } catch (error) {
+                console.error('Video generation failed:', error);
+                placeholder.innerHTML = '<div style="text-align:center; color:#ff4757;"><div style="font-size:36px; margin-bottom:8px;">⚠️</div><div style="font-size:12px;">Generation failed. Try again.</div></div>';
+                showToast('error', 'Generation Failed', error.message || 'Please try again');
+            }
+
+            // Reset button
+            btn.disabled = false;
+            btn.innerHTML = '<span>🎥</span> Generate Video';
         }
 
         // ============ CAMPAIGN MODAL FUNCTIONS ============
