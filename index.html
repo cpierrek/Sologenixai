@@ -7382,327 +7382,271 @@
             loadNotificationPreferences();
         });
 
-        // ========== AUTH VIEW SWITCHING (loads immediately) ==========
-        function showAuthView(view) {
-            console.log('Switching to auth view:', view);
-            document.querySelector('.sidebar').style.display = 'none';
-            document.querySelector('.main-content').style.display = 'none';
-            document.querySelectorAll('.auth-view').forEach(function(v) { v.style.display = 'none'; });
-            var authView = document.getElementById('auth-' + view);
-            if (authView) {
-                authView.style.display = 'flex';
-            }
-        }
-
-        function hideAuthViews() {
-            document.querySelectorAll('.auth-view').forEach(function(v) { v.style.display = 'none'; });
-            document.querySelector('.sidebar').style.display = 'flex';
-            document.querySelector('.main-content').style.display = 'flex';
-        }
     </script>
 
     <!-- Supabase SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-    <!-- SoloGenix Auth (embedded for local file support) -->
+    <!-- SoloGenix Auth -->
     <script>
         // Supabase Configuration
-        const SUPABASE_URL = 'https://wdprfkcrhmvzwlgkncpa.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndkcHJma2NyaG12endsZ2tuY3BhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYzNzE1NzQsImV4cCI6MjA4MTk0NzU3NH0.XJ5nTtv72S6_fkLppGrEoXQ_co_Bh02Q7rWKRUhKVIM';
+        var SUPABASE_URL = 'https://wdprfkcrhmvzwlgkncpa.supabase.co';
+        var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndkcHJma2NyaG12endsZ2tuY3BhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYzNzE1NzQsImV4cCI6MjA4MTk0NzU3NH0.XJ5nTtv72S6_fkLppGrEoXQ_co_Bh02Q7rWKRUhKVIM';
 
-        // Initialize Supabase client
-        let supabase = null;
+        var supabaseClient = null;
+        var authState = { isAuthenticated: false, user: null, session: null, loading: true };
 
-        // Auth state
-        const authState = {
-            isAuthenticated: false,
-            user: null,
-            session: null,
-            loading: true
-        };
-
-        // Helper: Show auth view
+        // Show auth view
         function showAuthView(view) {
-            document.querySelector('.sidebar').style.display = 'none';
-            document.querySelector('.main-content').style.display = 'none';
-            document.querySelectorAll('.auth-view').forEach(v => v.style.display = 'none');
-            const authView = document.getElementById('auth-' + view);
-            if (authView) authView.style.display = 'flex';
+            console.log('showAuthView called:', view);
+            var sidebar = document.querySelector('.sidebar');
+            var mainContent = document.querySelector('.main-content');
+            if (sidebar) sidebar.style.display = 'none';
+            if (mainContent) mainContent.style.display = 'none';
+            var authViews = document.querySelectorAll('.auth-view');
+            for (var i = 0; i < authViews.length; i++) {
+                authViews[i].style.display = 'none';
+            }
+            var targetView = document.getElementById('auth-' + view);
+            if (targetView) {
+                targetView.style.display = 'flex';
+            }
         }
 
-        // Helper: Hide auth views and show main app
+        // Hide auth views
         function hideAuthViews() {
-            document.querySelectorAll('.auth-view').forEach(v => v.style.display = 'none');
-            document.querySelector('.sidebar').style.display = 'flex';
-            document.querySelector('.main-content').style.display = 'flex';
+            var authViews = document.querySelectorAll('.auth-view');
+            for (var i = 0; i < authViews.length; i++) {
+                authViews[i].style.display = 'none';
+            }
+            var sidebar = document.querySelector('.sidebar');
+            var mainContent = document.querySelector('.main-content');
+            if (sidebar) sidebar.style.display = 'flex';
+            if (mainContent) mainContent.style.display = 'flex';
         }
 
-        // Helper: Show/hide auth loading state
+        // Show loading on buttons
         function showAuthLoading(show) {
-            const buttons = document.querySelectorAll('.auth-btn');
-            buttons.forEach(btn => {
-                btn.disabled = show;
-                if (show) {
-                    btn.dataset.originalText = btn.textContent;
-                    btn.innerHTML = '<span class="auth-spinner"></span> Loading...';
-                } else if (btn.dataset.originalText) {
-                    btn.textContent = btn.dataset.originalText;
-                }
-            });
+            var buttons = document.querySelectorAll('.auth-btn');
+            for (var i = 0; i < buttons.length; i++) {
+                buttons[i].disabled = show;
+            }
         }
 
-        // Helper: Get initials from name
+        // Get initials
         function getInitials(name) {
             if (!name) return 'U';
-            const parts = name.trim().split(' ');
+            var parts = name.trim().split(' ');
             if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
             return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
         }
 
-        // Helper: Update user UI elements
+        // Update UI with user info
         function updateUserUI(user) {
             if (!user) return;
-            const fullName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'User';
-            const initials = getInitials(fullName);
-            const plan = user.user_metadata?.plan || 'Free Plan';
-
-            const userNameEl = document.querySelector('.user-profile .user-name');
-            const userPlanEl = document.querySelector('.user-profile .user-plan');
-            const avatarEl = document.querySelector('.user-profile .avatar');
-
+            var fullName = (user.user_metadata && user.user_metadata.full_name) || (user.email ? user.email.split('@')[0] : 'User');
+            var initials = getInitials(fullName);
+            var userNameEl = document.querySelector('.user-profile .user-name');
+            var avatarEl = document.querySelector('.user-profile .avatar');
             if (userNameEl) userNameEl.textContent = fullName;
-            if (userPlanEl) userPlanEl.textContent = plan;
             if (avatarEl) avatarEl.textContent = initials;
-
-            const dashboardGreeting = document.querySelector('.page-title h1');
-            if (dashboardGreeting && dashboardGreeting.textContent.includes('Hello')) {
-                dashboardGreeting.textContent = `Hello, ${fullName.split(' ')[0]}`;
-            }
         }
 
-        // Initialize Supabase and check for existing session
-        async function initAuth() {
-            try {
-                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-                const { data: { session }, error } = await supabase.auth.getSession();
+        // Initialize auth
+        function initAuth() {
+            console.log('Initializing auth...');
+            if (typeof window.supabase === 'undefined') {
+                console.error('Supabase SDK not loaded');
+                showAuthView('login');
+                return;
+            }
+
+            supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            console.log('Supabase client created');
+
+            supabaseClient.auth.getSession().then(function(result) {
+                var session = result.data.session;
+                var error = result.error;
 
                 if (error) {
-                    console.error('Error getting session:', error);
-                    authState.loading = false;
+                    console.error('Session error:', error);
                     showAuthView('login');
                     return;
                 }
 
                 if (session) {
+                    console.log('User logged in:', session.user.email);
                     authState.isAuthenticated = true;
                     authState.user = session.user;
-                    authState.session = session;
                     updateUserUI(session.user);
                     hideAuthViews();
                     navigateTo('dashboard');
                 } else {
+                    console.log('No session, showing login');
                     showAuthView('login');
                 }
-
-                authState.loading = false;
-
-                supabase.auth.onAuthStateChange((event, session) => {
-                    if (event === 'SIGNED_IN' && session) {
-                        authState.isAuthenticated = true;
-                        authState.user = session.user;
-                        authState.session = session;
-                        updateUserUI(session.user);
-                        hideAuthViews();
-                        navigateTo('dashboard');
-                        showToast('success', 'Welcome!', 'You have successfully signed in.');
-                    } else if (event === 'SIGNED_OUT') {
-                        authState.isAuthenticated = false;
-                        authState.user = null;
-                        authState.session = null;
-                        showAuthView('login');
-                        showToast('info', 'Signed Out', 'You have been signed out.');
-                    } else if (event === 'PASSWORD_RECOVERY') {
-                        showAuthView('reset');
-                    }
-                });
-            } catch (error) {
-                console.error('Auth initialization error:', error);
-                authState.loading = false;
+            }).catch(function(err) {
+                console.error('Auth error:', err);
                 showAuthView('login');
-            }
-        }
+            });
 
-        // Sign up with email and password
-        async function signUp(email, password, fullName) {
-            try {
-                showAuthLoading(true);
-                const { data, error } = await supabase.auth.signUp({
-                    email: email,
-                    password: password,
-                    options: { data: { full_name: fullName } }
-                });
-                if (error) throw error;
-                showAuthLoading(false);
-                if (data.user && !data.session) {
-                    showToast('success', 'Check Your Email', 'We sent you a confirmation link.');
+            // Listen for auth changes
+            supabaseClient.auth.onAuthStateChange(function(event, session) {
+                console.log('Auth state changed:', event);
+                if (event === 'SIGNED_IN' && session) {
+                    authState.isAuthenticated = true;
+                    authState.user = session.user;
+                    updateUserUI(session.user);
+                    hideAuthViews();
+                    navigateTo('dashboard');
+                    showToast('success', 'Welcome!', 'Signed in successfully');
+                } else if (event === 'SIGNED_OUT') {
+                    authState.isAuthenticated = false;
+                    authState.user = null;
                     showAuthView('login');
-                } else if (data.session) {
-                    showToast('success', 'Account Created!', 'Welcome to SoloGenix!');
                 }
-                return { success: true, data };
-            } catch (error) {
-                showAuthLoading(false);
-                showToast('error', 'Sign Up Failed', error.message);
-                return { success: false, error };
-            }
+            });
         }
 
-        // Sign in with email and password
-        async function signIn(email, password) {
-            try {
-                showAuthLoading(true);
-                const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-                if (error) throw error;
-                showAuthLoading(false);
-                return { success: true, data };
-            } catch (error) {
-                showAuthLoading(false);
-                showToast('error', 'Sign In Failed', error.message);
-                return { success: false, error };
+        // Sign up
+        function handleSignupSubmit(event) {
+            event.preventDefault();
+            console.log('Signup submitted');
+
+            var fullName = document.getElementById('signupName').value;
+            var email = document.getElementById('signupEmail').value;
+            var password = document.getElementById('signupPassword').value;
+            var confirmPassword = document.getElementById('signupConfirmPassword').value;
+
+            if (password !== confirmPassword) {
+                showToast('error', 'Error', 'Passwords do not match');
+                return;
             }
+            if (password.length < 6) {
+                showToast('error', 'Error', 'Password must be at least 6 characters');
+                return;
+            }
+
+            showAuthLoading(true);
+
+            supabaseClient.auth.signUp({
+                email: email,
+                password: password,
+                options: { data: { full_name: fullName } }
+            }).then(function(result) {
+                showAuthLoading(false);
+                console.log('Signup result:', result);
+
+                if (result.error) {
+                    showToast('error', 'Sign Up Failed', result.error.message);
+                    return;
+                }
+
+                if (result.data.user && !result.data.session) {
+                    showToast('success', 'Check Email', 'Please confirm your email');
+                    showAuthView('login');
+                } else if (result.data.session) {
+                    showToast('success', 'Success!', 'Account created');
+                }
+            }).catch(function(err) {
+                showAuthLoading(false);
+                console.error('Signup error:', err);
+                showToast('error', 'Error', err.message);
+            });
         }
 
-        // Sign in with Google
-        async function signInWithGoogle() {
-            try {
-                showAuthLoading(true);
-                const { data, error } = await supabase.auth.signInWithOAuth({
-                    provider: 'google',
-                    options: { redirectTo: window.location.origin }
-                });
-                if (error) throw error;
-                return { success: true, data };
-            } catch (error) {
+        // Sign in
+        function handleLoginSubmit(event) {
+            event.preventDefault();
+            console.log('Login submitted');
+
+            var email = document.getElementById('loginEmail').value;
+            var password = document.getElementById('loginPassword').value;
+
+            showAuthLoading(true);
+
+            supabaseClient.auth.signInWithPassword({
+                email: email,
+                password: password
+            }).then(function(result) {
                 showAuthLoading(false);
-                showToast('error', 'Google Sign In Failed', error.message);
-                return { success: false, error };
-            }
+                console.log('Login result:', result);
+
+                if (result.error) {
+                    showToast('error', 'Sign In Failed', result.error.message);
+                }
+            }).catch(function(err) {
+                showAuthLoading(false);
+                console.error('Login error:', err);
+                showToast('error', 'Error', err.message);
+            });
         }
 
-        // Sign in with Apple
-        async function signInWithApple() {
-            try {
-                showAuthLoading(true);
-                const { data, error } = await supabase.auth.signInWithOAuth({
-                    provider: 'apple',
-                    options: { redirectTo: window.location.origin }
-                });
-                if (error) throw error;
-                return { success: true, data };
-            } catch (error) {
+        // Forgot password
+        function handleForgotSubmit(event) {
+            event.preventDefault();
+            var email = document.getElementById('forgotEmail').value;
+
+            showAuthLoading(true);
+            supabaseClient.auth.resetPasswordForEmail(email).then(function(result) {
                 showAuthLoading(false);
-                showToast('error', 'Apple Sign In Failed', error.message);
-                return { success: false, error };
+                if (result.error) {
+                    showToast('error', 'Error', result.error.message);
+                } else {
+                    showToast('success', 'Email Sent', 'Check your email for reset link');
+                    showAuthView('login');
+                }
+            });
+        }
+
+        // Reset password
+        function handleResetSubmit(event) {
+            event.preventDefault();
+            var password = document.getElementById('resetPassword').value;
+            var confirmPassword = document.getElementById('resetConfirmPassword').value;
+
+            if (password !== confirmPassword) {
+                showToast('error', 'Error', 'Passwords do not match');
+                return;
             }
+
+            showAuthLoading(true);
+            supabaseClient.auth.updateUser({ password: password }).then(function(result) {
+                showAuthLoading(false);
+                if (result.error) {
+                    showToast('error', 'Error', result.error.message);
+                } else {
+                    showToast('success', 'Success', 'Password updated');
+                    hideAuthViews();
+                    navigateTo('dashboard');
+                }
+            });
+        }
+
+        // Google sign in
+        function signInWithGoogle() {
+            supabaseClient.auth.signInWithOAuth({
+                provider: 'google',
+                options: { redirectTo: window.location.origin }
+            });
+        }
+
+        // Apple sign in
+        function signInWithApple() {
+            supabaseClient.auth.signInWithOAuth({
+                provider: 'apple',
+                options: { redirectTo: window.location.origin }
+            });
         }
 
         // Sign out
-        async function signOut() {
-            try {
-                const { error } = await supabase.auth.signOut();
-                if (error) throw error;
-                return { success: true };
-            } catch (error) {
-                showToast('error', 'Sign Out Failed', error.message);
-                return { success: false, error };
-            }
+        function signOut() {
+            supabaseClient.auth.signOut();
         }
 
-        // Send password reset email
-        async function resetPassword(email) {
-            try {
-                showAuthLoading(true);
-                const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-                    redirectTo: window.location.origin + '?reset=true'
-                });
-                if (error) throw error;
-                showAuthLoading(false);
-                showToast('success', 'Reset Link Sent', 'Check your email for a password reset link.');
-                showAuthView('login');
-                return { success: true, data };
-            } catch (error) {
-                showAuthLoading(false);
-                showToast('error', 'Reset Failed', error.message);
-                return { success: false, error };
-            }
-        }
-
-        // Update password
-        async function updatePassword(newPassword) {
-            try {
-                showAuthLoading(true);
-                const { data, error } = await supabase.auth.updateUser({ password: newPassword });
-                if (error) throw error;
-                showAuthLoading(false);
-                showToast('success', 'Password Updated', 'Your password has been changed.');
-                return { success: true, data };
-            } catch (error) {
-                showAuthLoading(false);
-                showToast('error', 'Update Failed', error.message);
-                return { success: false, error };
-            }
-        }
-
-        // Form handlers
-        function handleLoginSubmit(event) {
-            event.preventDefault();
-            const email = document.getElementById('loginEmail').value;
-            const password = document.getElementById('loginPassword').value;
-            signIn(email, password);
-        }
-
-        function handleSignupSubmit(event) {
-            event.preventDefault();
-            const fullName = document.getElementById('signupName').value;
-            const email = document.getElementById('signupEmail').value;
-            const password = document.getElementById('signupPassword').value;
-            const confirmPassword = document.getElementById('signupConfirmPassword').value;
-
-            if (password !== confirmPassword) {
-                showToast('error', 'Password Mismatch', 'Passwords do not match.');
-                return;
-            }
-            if (password.length < 6) {
-                showToast('error', 'Weak Password', 'Password must be at least 6 characters.');
-                return;
-            }
-            signUp(email, password, fullName);
-        }
-
-        function handleForgotSubmit(event) {
-            event.preventDefault();
-            const email = document.getElementById('forgotEmail').value;
-            resetPassword(email);
-        }
-
-        function handleResetSubmit(event) {
-            event.preventDefault();
-            const password = document.getElementById('resetPassword').value;
-            const confirmPassword = document.getElementById('resetConfirmPassword').value;
-
-            if (password !== confirmPassword) {
-                showToast('error', 'Password Mismatch', 'Passwords do not match.');
-                return;
-            }
-            if (password.length < 6) {
-                showToast('error', 'Weak Password', 'Password must be at least 6 characters.');
-                return;
-            }
-            updatePassword(password);
-        }
-
-        // Initialize auth when page loads
-        document.addEventListener('DOMContentLoaded', function() {
+        // Initialize when page loads
+        window.addEventListener('load', function() {
+            console.log('Page loaded, initializing auth');
             initAuth();
         });
     </script>
