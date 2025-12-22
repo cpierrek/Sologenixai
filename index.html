@@ -7382,7 +7382,7 @@
         var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndkcHJma2NyaG12endsZ2tuY3BhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYzNzE1NzQsImV4cCI6MjA4MTk0NzU3NH0.XJ5nTtv72S6_fkLppGrEoXQ_co_Bh02Q7rWKRUhKVIM';
 
         var supabaseClient = null;
-        var authState = { isAuthenticated: false, user: null, session: null, loading: true };
+        var authState = { isAuthenticated: false, user: null, session: null, loading: true, isResettingPassword: false };
 
         // Show auth view
         function showAuthView(view) {
@@ -7483,9 +7483,15 @@
                 console.log('Auth state changed:', event);
                 if (event === 'PASSWORD_RECOVERY') {
                     // User clicked password reset link - show reset form
+                    authState.isResettingPassword = true;
                     showAuthView('reset');
                     showToast('info', 'Reset Password', 'Enter your new password below');
                 } else if (event === 'SIGNED_IN' && session) {
+                    // Don't redirect to dashboard if user is resetting password
+                    if (authState.isResettingPassword) {
+                        console.log('In password reset mode, staying on reset form');
+                        return;
+                    }
                     authState.isAuthenticated = true;
                     authState.user = session.user;
                     updateUserUI(session.user);
@@ -7495,6 +7501,7 @@
                 } else if (event === 'SIGNED_OUT') {
                     authState.isAuthenticated = false;
                     authState.user = null;
+                    authState.isResettingPassword = false;
                     showAuthView('login');
                 }
             });
@@ -7608,6 +7615,8 @@
                 if (result.error) {
                     showToast('error', 'Error', result.error.message);
                 } else {
+                    authState.isResettingPassword = false;
+                    authState.isAuthenticated = true;
                     showToast('success', 'Success', 'Password updated');
                     hideAuthViews();
                     navigateTo('dashboard');
