@@ -6382,19 +6382,36 @@
             const productName = document.getElementById('pName').value || 'My Product';
             const productDesc = document.getElementById('pDesc').value || 'A great product';
 
+            if (!productName || productName === 'My Product') {
+                showToast('error', 'Missing Info', 'Please enter a product name');
+                return;
+            }
+
             document.getElementById('resultsProductName').textContent = productName;
             generatedAssets = [];
 
-            // Show generating overlay
-            document.getElementById('genOverlayTitle').textContent = 'Generating Content...';
-            document.getElementById('genOverlaySubtitle').textContent = 'AI is creating your Hook images (1/3)';
+            // Show generating overlay with time estimate
+            document.getElementById('genOverlayTitle').textContent = 'Generating Your Creatives';
+            document.getElementById('genOverlaySubtitle').innerHTML = 'This will take approximately <strong>2-3 minutes</strong><br><br><span style="font-size:14px; color:#888;">Creating Hook images (1/9)...</span>';
             document.getElementById('generatingOverlay').classList.add('active');
+
+            var imageCount = 0;
+            var totalImages = 9;
+
+            function updateProgress(stage, current, total) {
+                imageCount++;
+                document.getElementById('genOverlaySubtitle').innerHTML =
+                    'This will take approximately <strong>2-3 minutes</strong><br><br>' +
+                    '<span style="font-size:14px; color:#888;">' + stage + ' (' + imageCount + '/' + totalImages + ')</span><br>' +
+                    '<div style="margin-top:15px; width:200px; height:6px; background:#333; border-radius:3px; overflow:hidden; margin:15px auto 0;">' +
+                    '<div style="width:' + Math.round((imageCount/totalImages)*100) + '%; height:100%; background:linear-gradient(90deg, #00f3ff, #bc13fe); transition:width 0.3s;"></div></div>';
+            }
 
             try {
                 // Generate 3 Hook images
                 const hookHeadlines = generateHeadlines('hook', productName, productDesc);
                 for (let i = 0; i < 3; i++) {
-                    document.getElementById('genOverlaySubtitle').textContent = 'Creating Hook image ' + (i + 1) + ' of 3...';
+                    updateProgress('Creating Hook image ' + (i + 1) + ' of 3', i + 1, 3);
                     const prompt = getCreativePrompt('hook', productName, productDesc);
                     const imageUrl = await generateImage(prompt);
                     if (imageUrl) {
@@ -6404,10 +6421,9 @@
                 }
 
                 // Generate 3 Offer images
-                document.getElementById('genOverlaySubtitle').textContent = 'AI is creating your Offer images (2/3)';
                 const offerHeadlines = generateHeadlines('offer', productName, productDesc);
                 for (let i = 0; i < 3; i++) {
-                    document.getElementById('genOverlaySubtitle').textContent = 'Creating Offer image ' + (i + 1) + ' of 3...';
+                    updateProgress('Creating Offer image ' + (i + 1) + ' of 3', i + 1, 3);
                     const prompt = getCreativePrompt('offer', productName, productDesc);
                     const imageUrl = await generateImage(prompt);
                     if (imageUrl) {
@@ -6417,10 +6433,9 @@
                 }
 
                 // Generate 3 Educational images
-                document.getElementById('genOverlaySubtitle').textContent = 'AI is creating your Educational images (3/3)';
                 const eduHeadlines = generateHeadlines('educational', productName, productDesc);
                 for (let i = 0; i < 3; i++) {
-                    document.getElementById('genOverlaySubtitle').textContent = 'Creating Educational image ' + (i + 1) + ' of 3...';
+                    updateProgress('Creating Educational image ' + (i + 1) + ' of 3', i + 1, 3);
                     const prompt = getCreativePrompt('educational', productName, productDesc);
                     const imageUrl = await generateImage(prompt);
                     if (imageUrl) {
@@ -7509,15 +7524,34 @@
             // Listen for auth changes
             supabaseClient.auth.onAuthStateChange(function(event, session) {
                 console.log('Auth state changed:', event);
+
+                // Handle password recovery
                 if (event === 'PASSWORD_RECOVERY') {
-                    // User clicked password reset link - show reset form
                     authState.isResettingPassword = true;
                     showAuthView('reset');
                     showToast('info', 'Reset Password', 'Enter your new password below');
-                } else if (event === 'SIGNED_IN' && session) {
-                    // Don't redirect to dashboard if user is resetting password
+                    return;
+                }
+
+                // Handle sign out
+                if (event === 'SIGNED_OUT') {
+                    authState.isAuthenticated = false;
+                    authState.user = null;
+                    authState.isResettingPassword = false;
+                    showAuthView('login');
+                    return;
+                }
+
+                // Handle sign in - only redirect if not already authenticated
+                if (event === 'SIGNED_IN' && session) {
+                    // Skip if in password reset mode
                     if (authState.isResettingPassword) {
                         console.log('In password reset mode, staying on reset form');
+                        return;
+                    }
+                    // Skip if already authenticated (prevents redirect on tab switch)
+                    if (authState.isAuthenticated) {
+                        console.log('Already authenticated, not redirecting');
                         return;
                     }
                     authState.isAuthenticated = true;
@@ -7526,12 +7560,9 @@
                     hideAuthViews();
                     navigateTo('dashboard');
                     showToast('success', 'Welcome!', 'Signed in successfully');
-                } else if (event === 'SIGNED_OUT') {
-                    authState.isAuthenticated = false;
-                    authState.user = null;
-                    authState.isResettingPassword = false;
-                    showAuthView('login');
                 }
+
+                // Ignore TOKEN_REFRESHED and INITIAL_SESSION events
             });
         }
 
