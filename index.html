@@ -6953,30 +6953,85 @@
                 edu: 'Clean product demonstration of ' + productName + ', informative style, smooth camera movement, professional lighting, explainer video feel'
             };
 
+            const placeholder = document.getElementById('videoPlaceholder-' + type);
+
             try {
-                const response = await fetch('/api/generate-video', {
+                // Start video generation
+                const startResponse = await fetch('/api/generate-video', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ prompt: prompts[type] || prompts.hook })
                 });
 
-                const data = await response.json();
+                const startData = await startResponse.json();
 
-                if (data.error) {
-                    console.error('Video generation failed for ' + type + ':', data.error);
+                if (startData.error) {
+                    console.error('Video generation failed for ' + type + ':', startData.error);
+                    if (placeholder) {
+                        placeholder.innerHTML = '<div style="color:#ff4757; font-size:12px;">Failed to start</div>';
+                    }
                     return;
                 }
 
-                // Show video in results
-                const videoEl = document.getElementById('video-' + type);
-                const placeholder = document.getElementById('videoPlaceholder-' + type);
-                if (videoEl && data.videoUrl) {
-                    videoEl.src = data.videoUrl;
-                    videoEl.style.display = 'block';
-                    if (placeholder) placeholder.style.display = 'none';
+                if (!startData.taskId) {
+                    console.error('No task ID returned for ' + type);
+                    return;
                 }
+
+                // Show processing state
+                if (placeholder) {
+                    placeholder.innerHTML = '<div class="auth-spinner" style="width:30px; height:30px;"></div><div style="margin-top:10px; font-size:11px; color:#888;">Processing...</div>';
+                }
+
+                // Poll for completion (max 4 minutes)
+                const maxAttempts = 48;
+                let attempts = 0;
+
+                while (attempts < maxAttempts) {
+                    await new Promise(r => setTimeout(r, 5000)); // Wait 5 seconds
+
+                    const statusResponse = await fetch('/api/generate-video', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ taskId: startData.taskId })
+                    });
+
+                    const statusData = await statusResponse.json();
+
+                    if (statusData.status === 'completed' && statusData.videoUrl) {
+                        const videoEl = document.getElementById('video-' + type);
+                        if (videoEl) {
+                            videoEl.src = statusData.videoUrl;
+                            videoEl.style.display = 'block';
+                        }
+                        if (placeholder) placeholder.style.display = 'none';
+                        return;
+                    } else if (statusData.status === 'failed') {
+                        console.error('Video failed for ' + type + ':', statusData.error);
+                        if (placeholder) {
+                            placeholder.innerHTML = '<div style="color:#ff4757; font-size:12px;">Generation failed</div>';
+                        }
+                        return;
+                    }
+
+                    // Update progress if available
+                    if (placeholder && statusData.progress) {
+                        placeholder.innerHTML = '<div class="auth-spinner" style="width:30px; height:30px;"></div><div style="margin-top:10px; font-size:11px; color:#888;">' + Math.round(statusData.progress * 100) + '%</div>';
+                    }
+
+                    attempts++;
+                }
+
+                // Timed out
+                if (placeholder) {
+                    placeholder.innerHTML = '<div style="color:#ff4757; font-size:12px;">Timed out</div>';
+                }
+
             } catch (error) {
                 console.error('Video generation error for ' + type + ':', error);
+                if (placeholder) {
+                    placeholder.innerHTML = '<div style="color:#ff4757; font-size:12px;">Error</div>';
+                }
             }
         }
 
@@ -7080,34 +7135,74 @@
 
             // Disable button and show loading
             btn.disabled = true;
-            btn.innerHTML = '<span class="auth-spinner"></span> Generating (~2-3 min)...';
+            btn.innerHTML = '<span class="auth-spinner"></span> Starting...';
 
             // Show loading in preview
             const placeholder = document.getElementById('videoPlaceholder-' + type);
-            placeholder.innerHTML = '<div class="auth-spinner" style="width:40px; height:40px;"></div><div style="margin-top:15px; font-size:12px;">Creating your video with Runway AI...</div>';
+            placeholder.innerHTML = '<div class="auth-spinner" style="width:40px; height:40px;"></div><div style="margin-top:15px; font-size:12px;">Starting video generation...</div>';
 
             try {
-                const response = await fetch('/api/generate-video', {
+                // Start video generation
+                const startResponse = await fetch('/api/generate-video', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        prompt: prompts[type] || prompts.hook
-                    })
+                    body: JSON.stringify({ prompt: prompts[type] || prompts.hook })
                 });
 
-                const data = await response.json();
+                const startData = await startResponse.json();
 
-                if (data.error) {
-                    throw new Error(data.error);
+                if (startData.error) {
+                    throw new Error(startData.error);
                 }
 
-                // Show video
-                const videoEl = document.getElementById('video-' + type);
-                videoEl.src = data.videoUrl;
-                videoEl.style.display = 'block';
-                placeholder.style.display = 'none';
+                if (!startData.taskId) {
+                    throw new Error('No task ID returned');
+                }
 
-                showToast('success', 'Video Generated!', 'Your AI video is ready');
+                // Update UI to show processing
+                btn.innerHTML = '<span class="auth-spinner"></span> Processing...';
+                placeholder.innerHTML = '<div class="auth-spinner" style="width:40px; height:40px;"></div><div style="margin-top:15px; font-size:12px;">Creating your video with Runway AI...</div>';
+
+                // Poll for completion (max 4 minutes)
+                const maxAttempts = 48;
+                let attempts = 0;
+
+                while (attempts < maxAttempts) {
+                    await new Promise(r => setTimeout(r, 5000)); // Wait 5 seconds
+
+                    const statusResponse = await fetch('/api/generate-video', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ taskId: startData.taskId })
+                    });
+
+                    const statusData = await statusResponse.json();
+
+                    if (statusData.status === 'completed' && statusData.videoUrl) {
+                        // Show video
+                        const videoEl = document.getElementById('video-' + type);
+                        videoEl.src = statusData.videoUrl;
+                        videoEl.style.display = 'block';
+                        placeholder.style.display = 'none';
+
+                        btn.disabled = false;
+                        btn.innerHTML = '<span>🎥</span> Generate Video';
+                        showToast('success', 'Video Generated!', 'Your AI video is ready');
+                        return;
+                    } else if (statusData.status === 'failed') {
+                        throw new Error(statusData.error || 'Video generation failed');
+                    }
+
+                    // Update progress
+                    if (statusData.progress) {
+                        const pct = Math.round(statusData.progress * 100);
+                        placeholder.innerHTML = '<div class="auth-spinner" style="width:40px; height:40px;"></div><div style="margin-top:15px; font-size:12px;">Creating video... ' + pct + '%</div>';
+                    }
+
+                    attempts++;
+                }
+
+                throw new Error('Video generation timed out');
 
             } catch (error) {
                 console.error('Video generation failed:', error);
