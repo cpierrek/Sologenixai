@@ -7381,6 +7381,24 @@
             renderCalendar('gallery');
             loadNotificationPreferences();
         });
+
+        // ========== AUTH VIEW SWITCHING (loads immediately) ==========
+        function showAuthView(view) {
+            console.log('Switching to auth view:', view);
+            document.querySelector('.sidebar').style.display = 'none';
+            document.querySelector('.main-content').style.display = 'none';
+            document.querySelectorAll('.auth-view').forEach(function(v) { v.style.display = 'none'; });
+            var authView = document.getElementById('auth-' + view);
+            if (authView) {
+                authView.style.display = 'flex';
+            }
+        }
+
+        function hideAuthViews() {
+            document.querySelectorAll('.auth-view').forEach(function(v) { v.style.display = 'none'; });
+            document.querySelector('.sidebar').style.display = 'flex';
+            document.querySelector('.main-content').style.display = 'flex';
+        }
     </script>
 
     <!-- Supabase SDK -->
