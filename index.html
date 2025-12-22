@@ -913,6 +913,106 @@
         }
         .launch-btn:hover { transform: translateY(-2px); box-shadow: 0 0 30px rgba(188, 19, 254, 0.6); }
 
+        /* Content Type Selection */
+        .content-type-section {
+            background: rgba(20, 20, 35, 0.8);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 25px;
+        }
+        .content-type-label {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #888;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .content-type-label svg { width: 16px; height: 16px; }
+        .content-options {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+        .content-option {
+            background: rgba(0,0,0,0.3);
+            border: 2px solid rgba(255,255,255,0.08);
+            border-radius: 14px;
+            padding: 20px 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+        .content-option:hover {
+            border-color: rgba(0,243,255,0.3);
+            background: rgba(0,243,255,0.03);
+        }
+        .content-option:hover .option-icon svg {
+            filter: drop-shadow(0 0 8px rgba(0, 243, 255, 0.6));
+        }
+        .content-option.selected {
+            border-color: var(--primary-cyan);
+            background: linear-gradient(135deg, rgba(0,243,255,0.08), rgba(188,19,254,0.05));
+            box-shadow: 0 0 25px rgba(0,243,255,0.12);
+        }
+        .content-option.selected .option-icon svg {
+            filter: drop-shadow(0 0 12px rgba(0, 243, 255, 0.8));
+        }
+        .content-option.selected::after {
+            content: '✓';
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 20px;
+            height: 20px;
+            background: linear-gradient(135deg, var(--primary-cyan), var(--primary-purple));
+            border-radius: 50%;
+            font-size: 11px;
+            font-weight: bold;
+            color: black;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .option-icon { margin-bottom: 10px; }
+        .option-icon svg { width: 40px; height: 40px; transition: filter 0.3s; }
+        .option-title { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+        .content-option.selected .option-title {
+            background: linear-gradient(90deg, var(--primary-cyan), var(--primary-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .option-desc { font-size: 11px; color: #666; }
+
+        .credit-estimate {
+            background: linear-gradient(90deg, rgba(188,19,254,0.1), rgba(0,243,255,0.1));
+            border: 1px solid rgba(188,19,254,0.2);
+            border-radius: 10px;
+            padding: 14px 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+            margin-bottom: 15px;
+        }
+        .credit-label { font-size: 13px; color: #aaa; }
+        .credit-value {
+            font-size: 18px;
+            font-weight: 700;
+            background: linear-gradient(90deg, var(--primary-cyan), var(--primary-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        @media (max-width: 768px) {
+            .content-options { grid-template-columns: 1fr; }
+        }
+
         /* OAuth Modal */
         .oauth-modal {
             position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.8);
@@ -3326,6 +3426,76 @@
                         </div>
                     </div>
 
+                    <!-- Content Type Selection -->
+                    <svg style="position:absolute; width:0; height:0;">
+                        <defs>
+                            <linearGradient id="iconGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#00f3ff"/>
+                                <stop offset="100%" style="stop-color:#bc13fe"/>
+                            </linearGradient>
+                            <filter id="iconGlow" x="-50%" y="-50%" width="200%" height="200%">
+                                <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+                                <feMerge>
+                                    <feMergeNode in="coloredBlur"/>
+                                    <feMergeNode in="SourceGraphic"/>
+                                </feMerge>
+                            </filter>
+                        </defs>
+                    </svg>
+
+                    <div class="content-type-section">
+                        <div class="content-type-label">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="url(#iconGradient)" stroke-width="1.5">
+                                <polygon points="12,2 2,7 12,12 22,7"/>
+                                <polyline points="2,17 12,22 22,17"/>
+                                <polyline points="2,12 12,17 22,12"/>
+                            </svg>
+                            Select Content Type
+                        </div>
+                        <div class="content-options">
+                            <!-- Full Bundle -->
+                            <div class="content-option selected" data-type="bundle" onclick="selectContentType(this, 'bundle')">
+                                <div class="option-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="url(#iconGradient)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" filter="url(#iconGlow)">
+                                        <path d="M12 2L4 7v10l8 5 8-5V7l-8-5z"/>
+                                        <path d="M12 22V12"/>
+                                        <path d="M20 7l-8 5-8-5"/>
+                                        <circle cx="12" cy="12" r="2" fill="url(#iconGradient)"/>
+                                    </svg>
+                                </div>
+                                <div class="option-title">Full Bundle</div>
+                                <div class="option-desc">Images + Audio + Video</div>
+                            </div>
+
+                            <!-- Images Only -->
+                            <div class="content-option" data-type="images" onclick="selectContentType(this, 'images')">
+                                <div class="option-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="url(#iconGradient)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" filter="url(#iconGlow)">
+                                        <rect x="3" y="3" width="7" height="7"/>
+                                        <rect x="14" y="3" width="7" height="7"/>
+                                        <rect x="3" y="14" width="7" height="7"/>
+                                        <rect x="14" y="14" width="7" height="7"/>
+                                        <circle cx="6.5" cy="6.5" r="1" fill="url(#iconGradient)"/>
+                                    </svg>
+                                </div>
+                                <div class="option-title">Images Only</div>
+                                <div class="option-desc">9 static creatives</div>
+                            </div>
+
+                            <!-- Videos Only -->
+                            <div class="content-option" data-type="videos" onclick="selectContentType(this, 'videos')">
+                                <div class="option-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="url(#iconGradient)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" filter="url(#iconGlow)">
+                                        <circle cx="12" cy="12" r="9"/>
+                                        <polygon points="10,8 16,12 10,16 10,8" fill="url(#iconGradient)"/>
+                                    </svg>
+                                </div>
+                                <div class="option-title">Videos Only</div>
+                                <div class="option-desc">3 AI video ads</div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="dashboard-grid">
                         <div class="brand-panel">
                             <div class="brand-title">🎨 Brand DNA</div>
@@ -3432,6 +3602,11 @@
                                     <div style="font-size:24px;">☁️</div>
                                     <div style="font-size:13px; color:#aaa;">Drag & Drop Photos Here</div>
                                 </div>
+                            </div>
+
+                            <div class="credit-estimate">
+                                <div class="credit-label">Estimated Credits</div>
+                                <div class="credit-value" id="creditEstimate">~45 credits</div>
                             </div>
 
                             <button class="launch-btn" onclick="launchCampaign()">🚀 LAUNCH CAMPAIGN</button>
@@ -6617,6 +6792,23 @@
         // Store generated images for download
         var generatedAssets = [];
 
+        // Content type selection
+        var selectedContentType = 'bundle'; // 'bundle', 'images', 'videos'
+
+        function selectContentType(el, type) {
+            document.querySelectorAll('.content-option').forEach(opt => opt.classList.remove('selected'));
+            el.classList.add('selected');
+            selectedContentType = type;
+
+            // Update credit estimate
+            const credits = {
+                bundle: '~45 credits',
+                images: '~18 credits',
+                videos: '~30 credits'
+            };
+            document.getElementById('creditEstimate').textContent = credits[type];
+        }
+
         // Launch campaign and show results
         async function launchCampaign() {
             const productName = document.getElementById('pName').value || 'My Product';
@@ -6630,92 +6822,161 @@
             document.getElementById('resultsProductName').textContent = productName;
             generatedAssets = [];
 
-            // Show generating overlay with time estimate
+            // Determine what to generate based on content type
+            const generateImages = selectedContentType === 'bundle' || selectedContentType === 'images';
+            const generateVideos = selectedContentType === 'bundle' || selectedContentType === 'videos';
+            const generateScripts = selectedContentType === 'bundle' || selectedContentType === 'videos';
+
+            // Calculate totals for progress
+            var totalImages = generateImages ? 9 : 0;
+            var totalVideos = generateVideos ? 3 : 0;
+            var totalSteps = totalImages + totalVideos + (generateScripts ? 1 : 0);
+
+            // Set time estimate based on content type
+            var timeEstimate = selectedContentType === 'bundle' ? '5-8 minutes' :
+                              selectedContentType === 'videos' ? '6-9 minutes' : '2-3 minutes';
+
+            // Show generating overlay
             document.getElementById('genOverlayTitle').textContent = 'Generating Your Creatives';
-            document.getElementById('genOverlaySubtitle').innerHTML = 'This will take approximately <strong>2-3 minutes</strong><br><br><span style="font-size:14px; color:#888;">Creating Hook images (1/9)...</span>';
+            document.getElementById('genOverlaySubtitle').innerHTML = 'This will take approximately <strong>' + timeEstimate + '</strong><br><br><span style="font-size:14px; color:#888;">Starting...</span>';
             document.getElementById('generatingOverlay').classList.add('active');
 
-            var imageCount = 0;
-            var totalImages = 9;
+            var currentStep = 0;
 
-            function updateProgress(stage, current, total) {
-                imageCount++;
+            function updateProgress(stage) {
+                currentStep++;
                 document.getElementById('genOverlaySubtitle').innerHTML =
-                    'This will take approximately <strong>2-3 minutes</strong><br><br>' +
-                    '<span style="font-size:14px; color:#888;">' + stage + ' (' + imageCount + '/' + totalImages + ')</span><br>' +
+                    'This will take approximately <strong>' + timeEstimate + '</strong><br><br>' +
+                    '<span style="font-size:14px; color:#888;">' + stage + '</span><br>' +
                     '<div style="margin-top:15px; width:200px; height:6px; background:#333; border-radius:3px; overflow:hidden; margin:15px auto 0;">' +
-                    '<div style="width:' + Math.round((imageCount/totalImages)*100) + '%; height:100%; background:linear-gradient(90deg, #00f3ff, #bc13fe); transition:width 0.3s;"></div></div>';
+                    '<div style="width:' + Math.round((currentStep/totalSteps)*100) + '%; height:100%; background:linear-gradient(90deg, #00f3ff, #bc13fe); transition:width 0.3s;"></div></div>';
             }
 
             try {
-                // Generate 3 Hook images
-                const hookHeadlines = generateHeadlines('hook', productName, productDesc);
-                for (let i = 0; i < 3; i++) {
-                    updateProgress('Creating Hook image ' + (i + 1) + ' of 3', i + 1, 3);
-                    const prompt = getCreativePrompt('hook', productName, productDesc);
-                    const imageUrl = await generateImage(prompt);
-                    if (imageUrl) {
-                        updateResultCard('hooks', i, imageUrl, hookHeadlines[i].headline, hookHeadlines[i].subhead);
-                        generatedAssets.push({ type: 'hook', url: imageUrl, headline: hookHeadlines[i].headline });
+                // Generate Images (if selected)
+                if (generateImages) {
+                    // Generate 3 Hook images
+                    const hookHeadlines = generateHeadlines('hook', productName, productDesc);
+                    for (let i = 0; i < 3; i++) {
+                        updateProgress('Creating Hook image ' + (i + 1) + ' of 3');
+                        const prompt = getCreativePrompt('hook', productName, productDesc);
+                        const imageUrl = await generateImage(prompt);
+                        if (imageUrl) {
+                            updateResultCard('hooks', i, imageUrl, hookHeadlines[i].headline, hookHeadlines[i].subhead);
+                            generatedAssets.push({ type: 'hook', url: imageUrl, headline: hookHeadlines[i].headline });
+                        }
+                    }
+
+                    // Generate 3 Offer images
+                    const offerHeadlines = generateHeadlines('offer', productName, productDesc);
+                    for (let i = 0; i < 3; i++) {
+                        updateProgress('Creating Offer image ' + (i + 1) + ' of 3');
+                        const prompt = getCreativePrompt('offer', productName, productDesc);
+                        const imageUrl = await generateImage(prompt);
+                        if (imageUrl) {
+                            updateResultCard('offers', i, imageUrl, offerHeadlines[i].headline, offerHeadlines[i].subhead);
+                            generatedAssets.push({ type: 'offer', url: imageUrl, headline: offerHeadlines[i].headline });
+                        }
+                    }
+
+                    // Generate 3 Educational images
+                    const eduHeadlines = generateHeadlines('educational', productName, productDesc);
+                    for (let i = 0; i < 3; i++) {
+                        updateProgress('Creating Educational image ' + (i + 1) + ' of 3');
+                        const prompt = getCreativePrompt('educational', productName, productDesc);
+                        const imageUrl = await generateImage(prompt);
+                        if (imageUrl) {
+                            updateResultCard('edu', i, imageUrl, eduHeadlines[i].headline, eduHeadlines[i].subhead);
+                            generatedAssets.push({ type: 'educational', url: imageUrl, headline: eduHeadlines[i].headline });
+                        }
                     }
                 }
 
-                // Generate 3 Offer images
-                const offerHeadlines = generateHeadlines('offer', productName, productDesc);
-                for (let i = 0; i < 3; i++) {
-                    updateProgress('Creating Offer image ' + (i + 1) + ' of 3', i + 1, 3);
-                    const prompt = getCreativePrompt('offer', productName, productDesc);
-                    const imageUrl = await generateImage(prompt);
-                    if (imageUrl) {
-                        updateResultCard('offers', i, imageUrl, offerHeadlines[i].headline, offerHeadlines[i].subhead);
-                        generatedAssets.push({ type: 'offer', url: imageUrl, headline: offerHeadlines[i].headline });
-                    }
+                // Generate AI scripts for voiceovers (if bundle or videos)
+                if (generateScripts) {
+                    updateProgress('Generating AI scripts...');
+
+                    const scriptTypes = ['hook', 'offer', 'edu'];
+                    const scriptPromises = scriptTypes.map(type =>
+                        fetch('/api/generate-script', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ productName, productDesc, type })
+                        }).then(r => r.json()).catch(() => ({ script: '' }))
+                    );
+
+                    const scripts = await Promise.all(scriptPromises);
+
+                    scripts.forEach((data, index) => {
+                        const textarea = document.getElementById('voiceScript-' + scriptTypes[index]);
+                        if (textarea && data.script) {
+                            textarea.value = data.script;
+                        }
+                    });
                 }
 
-                // Generate 3 Educational images
-                const eduHeadlines = generateHeadlines('educational', productName, productDesc);
-                for (let i = 0; i < 3; i++) {
-                    updateProgress('Creating Educational image ' + (i + 1) + ' of 3', i + 1, 3);
-                    const prompt = getCreativePrompt('educational', productName, productDesc);
-                    const imageUrl = await generateImage(prompt);
-                    if (imageUrl) {
-                        updateResultCard('edu', i, imageUrl, eduHeadlines[i].headline, eduHeadlines[i].subhead);
-                        generatedAssets.push({ type: 'educational', url: imageUrl, headline: eduHeadlines[i].headline });
+                // Generate Videos (if selected)
+                if (generateVideos) {
+                    const videoTypes = ['hook', 'offer', 'edu'];
+                    for (const vType of videoTypes) {
+                        updateProgress('Generating ' + vType.charAt(0).toUpperCase() + vType.slice(1) + ' video...');
+                        await generateVideoAuto(vType, productName);
                     }
                 }
-
-                // Now generate AI scripts for voiceovers
-                document.getElementById('genOverlaySubtitle').innerHTML =
-                    '<span style="font-size:14px; color:#888;">Generating AI scripts for voiceovers...</span>';
-
-                // Generate scripts in parallel
-                const scriptTypes = ['hook', 'offer', 'edu'];
-                const scriptPromises = scriptTypes.map(type =>
-                    fetch('/api/generate-script', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ productName, productDesc, type })
-                    }).then(r => r.json()).catch(() => ({ script: '' }))
-                );
-
-                const scripts = await Promise.all(scriptPromises);
-
-                // Populate script textareas
-                scripts.forEach((data, index) => {
-                    const textarea = document.getElementById('voiceScript-' + scriptTypes[index]);
-                    if (textarea && data.script) {
-                        textarea.value = data.script;
-                    }
-                });
 
                 document.getElementById('generatingOverlay').classList.remove('active');
                 navigateTo('results');
-                showToast('success', 'Campaign Generated!', generatedAssets.length + ' images + 3 AI scripts created');
+
+                // Show appropriate success message
+                var successMsg = '';
+                if (selectedContentType === 'bundle') {
+                    successMsg = generatedAssets.length + ' images + 3 scripts + 3 videos created';
+                } else if (selectedContentType === 'images') {
+                    successMsg = generatedAssets.length + ' images created';
+                } else {
+                    successMsg = '3 scripts + 3 videos created';
+                }
+                showToast('success', 'Campaign Generated!', successMsg);
 
             } catch (error) {
                 console.error('Campaign generation failed:', error);
                 document.getElementById('generatingOverlay').classList.remove('active');
                 showToast('error', 'Generation Failed', error.message || 'Please try again');
+            }
+        }
+
+        // Auto-generate video (called during campaign launch)
+        async function generateVideoAuto(type, productName) {
+            const prompts = {
+                hook: 'Eye-catching product reveal of ' + productName + ', dramatic lighting, quick cuts, attention-grabbing motion, social media ad style',
+                offer: 'Product showcase of ' + productName + ' with sale graphics, urgency feel, promotional style, vibrant colors, call to action vibe',
+                edu: 'Clean product demonstration of ' + productName + ', informative style, smooth camera movement, professional lighting, explainer video feel'
+            };
+
+            try {
+                const response = await fetch('/api/generate-video', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt: prompts[type] || prompts.hook })
+                });
+
+                const data = await response.json();
+
+                if (data.error) {
+                    console.error('Video generation failed for ' + type + ':', data.error);
+                    return;
+                }
+
+                // Show video in results
+                const videoEl = document.getElementById('video-' + type);
+                const placeholder = document.getElementById('videoPlaceholder-' + type);
+                if (videoEl && data.videoUrl) {
+                    videoEl.src = data.videoUrl;
+                    videoEl.style.display = 'block';
+                    if (placeholder) placeholder.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Video generation error for ' + type + ':', error);
             }
         }
 
@@ -6807,49 +7068,30 @@
 
         // ============ VIDEO GENERATION ============
         async function generateVideo(type) {
-            // Map type to zone id
-            const zoneMap = { hook: 'hooks', offer: 'offers', edu: 'edu' };
-            const zoneId = zoneMap[type];
-
-            // Get the first image URL from the corresponding zone
-            const zone = document.getElementById('result-zone-' + zoneId);
-            if (!zone) {
-                showToast('error', 'No Images', 'Generate images first before creating videos');
-                return;
-            }
-
-            const firstCard = zone.querySelector('.result-card .result-image');
-            if (!firstCard) {
-                showToast('error', 'No Images', 'Generate images first before creating videos');
-                return;
-            }
-
-            const bgImage = firstCard.style.backgroundImage;
-            const imageUrl = bgImage ? bgImage.replace(/url\(['"]?/, '').replace(/['"]?\)/, '') : null;
-
-            if (!imageUrl || imageUrl === 'none') {
-                showToast('error', 'No Images', 'Generate images first before creating videos');
-                return;
-            }
-
             const productName = document.getElementById('resultsProductName').textContent || 'Product';
             const btn = document.querySelector('#video-card-' + type + ' .generate-video-btn');
 
+            // Video prompts based on type
+            const prompts = {
+                hook: 'Eye-catching product reveal of ' + productName + ', dramatic lighting, quick cuts, attention-grabbing motion, social media ad style',
+                offer: 'Product showcase of ' + productName + ' with sale graphics, urgency feel, promotional style, vibrant colors, call to action vibe',
+                edu: 'Clean product demonstration of ' + productName + ', informative style, smooth camera movement, professional lighting, explainer video feel'
+            };
+
             // Disable button and show loading
             btn.disabled = true;
-            btn.innerHTML = '<span class="auth-spinner"></span> Generating (~1-2 min)...';
+            btn.innerHTML = '<span class="auth-spinner"></span> Generating (~2-3 min)...';
 
             // Show loading in preview
             const placeholder = document.getElementById('videoPlaceholder-' + type);
-            placeholder.innerHTML = '<div class="auth-spinner" style="width:40px; height:40px;"></div><div style="margin-top:15px; font-size:12px;">Creating your video...</div>';
+            placeholder.innerHTML = '<div class="auth-spinner" style="width:40px; height:40px;"></div><div style="margin-top:15px; font-size:12px;">Creating your video with Runway AI...</div>';
 
             try {
                 const response = await fetch('/api/generate-video', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        prompt: 'Cinematic product advertisement for ' + productName + ', smooth camera movement, professional lighting, high quality',
-                        imageUrl: imageUrl
+                        prompt: prompts[type] || prompts.hook
                     })
                 });
 
@@ -6869,7 +7111,7 @@
 
             } catch (error) {
                 console.error('Video generation failed:', error);
-                placeholder.innerHTML = '<div style="text-align:center; color:#ff4757;"><div style="font-size:36px; margin-bottom:8px;">⚠️</div><div style="font-size:12px;">Generation failed. Try again.</div></div>';
+                placeholder.innerHTML = '<div style="text-align:center; color:#ff4757;"><div style="font-size:36px; margin-bottom:8px;">⚠️</div><div style="font-size:12px;">' + (error.message || 'Generation failed') + '</div></div>';
                 showToast('error', 'Generation Failed', error.message || 'Please try again');
             }
 
