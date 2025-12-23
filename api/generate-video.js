@@ -1,5 +1,4 @@
 export default async function handler(req, res) {
-    // Only allow POST requests
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Method not allowed' });
     }
@@ -11,14 +10,51 @@ export default async function handler(req, res) {
     }
 
     try {
-        const { prompt, imageUrl } = req.body;
+        const { prompt, taskId } = req.body;
 
+        // If taskId provided, check status of existing task
+        if (taskId) {
+            const statusResponse = await fetch(`https://api.dev.runwayml.com/v1/tasks/${taskId}`, {
+                headers: {
+                    'Authorization': `Bearer ${apiKey}`,
+                    'X-Runway-Version': '2024-11-06'
+                }
+            });
+
+            if (!statusResponse.ok) {
+                const errorText = await statusResponse.text();
+                return res.status(400).json({ error: 'Failed to check status: ' + errorText });
+            }
+
+            const statusData = await statusResponse.json();
+
+            if (statusData.status === 'SUCCEEDED') {
+                return res.status(200).json({
+                    success: true,
+                    status: 'completed',
+                    videoUrl: statusData.output?.[0] || statusData.output
+                });
+            } else if (statusData.status === 'FAILED') {
+                return res.status(200).json({
+                    success: false,
+                    status: 'failed',
+                    error: statusData.failure || statusData.failureCode || 'Video generation failed'
+                });
+            } else {
+                return res.status(200).json({
+                    success: true,
+                    status: 'processing',
+                    progress: statusData.progress || 0
+                });
+            }
+        }
+
+        // Start new video generation task
         if (!prompt) {
             return res.status(400).json({ error: 'Prompt is required' });
         }
 
-        // Start video generation task
-        const createResponse = await fetch('https://api.runwayml.com/v1/image_to_video', {
+        const createResponse = await fetch('https://api.dev.runwayml.com/v1/text_to_video', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -27,54 +63,33 @@ export default async function handler(req, res) {
             },
             body: JSON.stringify({
                 model: 'gen3a_turbo',
-                promptImage: imageUrl || undefined,
                 promptText: prompt,
                 duration: 5,
-                ratio: '1280:768'
+                ratio: '16:9'
             })
         });
 
+        if (!createResponse.ok) {
+            const errorText = await createResponse.text();
+            console.error('Runway Create Error:', errorText);
+            return res.status(400).json({ error: 'Failed to start video generation: ' + errorText });
+        }
+
         const createData = await createResponse.json();
 
-        if (createData.error) {
-            console.error('Runway Create Error:', createData.error);
-            return res.status(400).json({ error: createData.error });
+        if (!createData.id) {
+            return res.status(400).json({ error: 'No task ID returned from Runway' });
         }
 
-        const taskId = createData.id;
-
-        // Poll for completion (max 2 minutes)
-        let attempts = 0;
-        const maxAttempts = 24;
-
-        while (attempts < maxAttempts) {
-            await new Promise(r => setTimeout(r, 5000)); // Wait 5 seconds
-
-            const statusResponse = await fetch(`https://api.runwayml.com/v1/tasks/${taskId}`, {
-                headers: {
-                    'Authorization': `Bearer ${apiKey}`,
-                    'X-Runway-Version': '2024-11-06'
-                }
-            });
-
-            const statusData = await statusResponse.json();
-
-            if (statusData.status === 'SUCCEEDED') {
-                return res.status(200).json({
-                    success: true,
-                    videoUrl: statusData.output[0]
-                });
-            } else if (statusData.status === 'FAILED') {
-                return res.status(400).json({ error: 'Video generation failed' });
-            }
-
-            attempts++;
-        }
-
-        return res.status(408).json({ error: 'Video generation timed out' });
+        // Return task ID immediately - frontend will poll for completion
+        return res.status(200).json({
+            success: true,
+            status: 'started',
+            taskId: createData.id
+        });
 
     } catch (error) {
         console.error('Video generation failed:', error);
-        return res.status(500).json({ error: 'Video generation failed' });
+        return res.status(500).json({ error: error.message || 'Video generation failed' });
     }
 }
