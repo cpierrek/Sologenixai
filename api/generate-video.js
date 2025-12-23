@@ -54,6 +54,7 @@ export default async function handler(req, res) {
             return res.status(400).json({ error: 'Prompt is required' });
         }
 
+        // Using veo3.1_fast for text-to-video (gen3a_turbo only supports image-to-video)
         const createResponse = await fetch('https://api.dev.runwayml.com/v1/text_to_video', {
             method: 'POST',
             headers: {
@@ -62,10 +63,11 @@ export default async function handler(req, res) {
                 'X-Runway-Version': '2024-11-06'
             },
             body: JSON.stringify({
-                model: 'gen3a_turbo',
-                prompt: prompt,
-                duration: 5,
-                aspectRatio: '16:9'
+                model: 'veo3.1_fast',
+                promptText: prompt,
+                ratio: '1920:1080',
+                duration: 4,
+                audio: false
             })
         });
 
