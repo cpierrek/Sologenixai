@@ -62,7 +62,7 @@ export default async function handler(req, res) {
                 'X-Runway-Version': '2024-11-06'
             },
             body: JSON.stringify({
-                model: 'gen3a_turbo',
+                model: 'gen-3-alpha-turbo',
                 promptText: prompt,
                 duration: 5,
                 ratio: '16:9'
