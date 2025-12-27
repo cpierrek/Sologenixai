@@ -6607,11 +6607,29 @@
             try {
                 showToast('info', 'Downloading...', 'Preparing your image');
 
-                // Fetch the image as a blob
-                const response = await fetch(imageUrl);
-                const blob = await response.blob();
+                // Use proxy API to fetch image (bypasses CORS)
+                const response = await fetch('/api/download-image', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ imageUrl: imageUrl })
+                });
 
-                // Create download link
+                const data = await response.json();
+
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
+                // Convert base64 to blob
+                const byteCharacters = atob(data.imageData);
+                const byteNumbers = new Array(byteCharacters.length);
+                for (let i = 0; i < byteCharacters.length; i++) {
+                    byteNumbers[i] = byteCharacters.charCodeAt(i);
+                }
+                const byteArray = new Uint8Array(byteNumbers);
+                const blob = new Blob([byteArray], { type: data.contentType });
+
+                // Create download link and trigger direct download
                 const url = window.URL.createObjectURL(blob);
                 const link = document.createElement('a');
                 link.href = url;
@@ -6624,9 +6642,7 @@
                 showToast('success', 'Downloaded!', filename + ' saved');
             } catch (error) {
                 console.error('Download failed:', error);
-                // Fallback: open in new tab
-                window.open(imageUrl, '_blank');
-                showToast('info', 'Opened in New Tab', 'Right-click to save the image');
+                showToast('error', 'Download Failed', error.message || 'Please try again');
             }
         }
 
