@@ -3762,6 +3762,7 @@
                         </div>
                         <div class="zone-actions">
                             <button class="zone-action-btn" onclick="selectAllInResultZone('hooks')"><span>☐</span> Select All</button>
+                            <button class="zone-action-btn" onclick="downloadZoneImages('hooks')"><span>⬇️</span> Download All</button>
                             <button class="zone-action-btn" onclick="openModal('regenerateModal')"><span>🔄</span> Regenerate Zone</button>
                         </div>
                     </div>
@@ -3777,7 +3778,7 @@
                             <div class="result-actions">
                                 <div class="result-tool"><span class="result-tool-icon">✏️</span>Edit</div>
                                 <div class="result-tool"><span class="result-tool-icon">🔄</span>Revise</div>
-                                <div class="result-tool"><span class="result-tool-icon">⬇️</span>Save</div>
+                                <div class="result-tool" onclick="event.stopPropagation(); downloadImage('hooks', 0)"><span class="result-tool-icon">⬇️</span>Save</div>
                                 <div class="result-tool"><span class="result-tool-icon">📋</span>Copy</div>
                             </div>
                         </div>
@@ -3792,7 +3793,7 @@
                             <div class="result-actions">
                                 <div class="result-tool"><span class="result-tool-icon">✏️</span>Edit</div>
                                 <div class="result-tool"><span class="result-tool-icon">🔄</span>Revise</div>
-                                <div class="result-tool"><span class="result-tool-icon">⬇️</span>Save</div>
+                                <div class="result-tool" onclick="event.stopPropagation(); downloadImage('hooks', 1)"><span class="result-tool-icon">⬇️</span>Save</div>
                                 <div class="result-tool"><span class="result-tool-icon">📋</span>Copy</div>
                             </div>
                         </div>
@@ -3807,7 +3808,7 @@
                             <div class="result-actions">
                                 <div class="result-tool"><span class="result-tool-icon">✏️</span>Edit</div>
                                 <div class="result-tool"><span class="result-tool-icon">🔄</span>Revise</div>
-                                <div class="result-tool"><span class="result-tool-icon">⬇️</span>Save</div>
+                                <div class="result-tool" onclick="event.stopPropagation(); downloadImage('hooks', 2)"><span class="result-tool-icon">⬇️</span>Save</div>
                                 <div class="result-tool"><span class="result-tool-icon">📋</span>Copy</div>
                             </div>
                         </div>
@@ -3823,7 +3824,8 @@
                         </div>
                         <div class="zone-actions">
                             <button class="zone-action-btn" onclick="selectAllInResultZone('offers')"><span>☐</span> Select All</button>
-                            <button class="zone-action-btn"><span>🔄</span> Regenerate Zone</button>
+                            <button class="zone-action-btn" onclick="downloadZoneImages('offers')"><span>⬇️</span> Download All</button>
+                            <button class="zone-action-btn" onclick="openModal('regenerateModal')"><span>🔄</span> Regenerate Zone</button>
                         </div>
                     </div>
                     <div class="content-grid">
@@ -3838,7 +3840,7 @@
                             <div class="result-actions">
                                 <div class="result-tool"><span class="result-tool-icon">✏️</span>Edit</div>
                                 <div class="result-tool"><span class="result-tool-icon">🔄</span>Revise</div>
-                                <div class="result-tool"><span class="result-tool-icon">⬇️</span>Save</div>
+                                <div class="result-tool" onclick="event.stopPropagation(); downloadImage('offers', 0)"><span class="result-tool-icon">⬇️</span>Save</div>
                                 <div class="result-tool"><span class="result-tool-icon">📋</span>Copy</div>
                             </div>
                         </div>
@@ -3853,7 +3855,7 @@
                             <div class="result-actions">
                                 <div class="result-tool"><span class="result-tool-icon">✏️</span>Edit</div>
                                 <div class="result-tool"><span class="result-tool-icon">🔄</span>Revise</div>
-                                <div class="result-tool"><span class="result-tool-icon">⬇️</span>Save</div>
+                                <div class="result-tool" onclick="event.stopPropagation(); downloadImage('offers', 1)"><span class="result-tool-icon">⬇️</span>Save</div>
                                 <div class="result-tool"><span class="result-tool-icon">📋</span>Copy</div>
                             </div>
                         </div>
@@ -3868,7 +3870,7 @@
                             <div class="result-actions">
                                 <div class="result-tool"><span class="result-tool-icon">✏️</span>Edit</div>
                                 <div class="result-tool"><span class="result-tool-icon">🔄</span>Revise</div>
-                                <div class="result-tool"><span class="result-tool-icon">⬇️</span>Save</div>
+                                <div class="result-tool" onclick="event.stopPropagation(); downloadImage('offers', 2)"><span class="result-tool-icon">⬇️</span>Save</div>
                                 <div class="result-tool"><span class="result-tool-icon">📋</span>Copy</div>
                             </div>
                         </div>
@@ -3883,8 +3885,9 @@
                             <span style="font-size:12px; color:#888; font-weight:400; margin-left:10px;">(Facts & Value)</span>
                         </div>
                         <div class="zone-actions">
-                            <button class="zone-action-btn"><span>☐</span> Select All</button>
-                            <button class="zone-action-btn"><span>🔄</span> Regenerate Zone</button>
+                            <button class="zone-action-btn" onclick="selectAllInResultZone('edu')"><span>☐</span> Select All</button>
+                            <button class="zone-action-btn" onclick="downloadZoneImages('edu')"><span>⬇️</span> Download All</button>
+                            <button class="zone-action-btn" onclick="openModal('regenerateModal')"><span>🔄</span> Regenerate Zone</button>
                         </div>
                     </div>
                     <div class="content-grid">
@@ -3899,7 +3902,7 @@
                             <div class="result-actions">
                                 <div class="result-tool"><span class="result-tool-icon">✏️</span>Edit</div>
                                 <div class="result-tool"><span class="result-tool-icon">🔄</span>Revise</div>
-                                <div class="result-tool"><span class="result-tool-icon">⬇️</span>Save</div>
+                                <div class="result-tool" onclick="event.stopPropagation(); downloadImage('edu', 0)"><span class="result-tool-icon">⬇️</span>Save</div>
                                 <div class="result-tool"><span class="result-tool-icon">📋</span>Copy</div>
                             </div>
                         </div>
@@ -3914,7 +3917,7 @@
                             <div class="result-actions">
                                 <div class="result-tool"><span class="result-tool-icon">✏️</span>Edit</div>
                                 <div class="result-tool"><span class="result-tool-icon">🔄</span>Revise</div>
-                                <div class="result-tool"><span class="result-tool-icon">⬇️</span>Save</div>
+                                <div class="result-tool" onclick="event.stopPropagation(); downloadImage('edu', 1)"><span class="result-tool-icon">⬇️</span>Save</div>
                                 <div class="result-tool"><span class="result-tool-icon">📋</span>Copy</div>
                             </div>
                         </div>
@@ -3929,7 +3932,7 @@
                             <div class="result-actions">
                                 <div class="result-tool"><span class="result-tool-icon">✏️</span>Edit</div>
                                 <div class="result-tool"><span class="result-tool-icon">🔄</span>Revise</div>
-                                <div class="result-tool"><span class="result-tool-icon">⬇️</span>Save</div>
+                                <div class="result-tool" onclick="event.stopPropagation(); downloadImage('edu', 2)"><span class="result-tool-icon">⬇️</span>Save</div>
                                 <div class="result-tool"><span class="result-tool-icon">📋</span>Copy</div>
                             </div>
                         </div>
@@ -4056,9 +4059,12 @@
                                 </div>
                                 <video id="video-hook" style="width:100%; height:100%; display:none;" controls></video>
                             </div>
-                            <div style="padding:15px;">
-                                <button class="generate-video-btn" onclick="generateVideo('hook')" style="width:100%; background:linear-gradient(90deg, var(--primary-purple), var(--primary-pink)); border:none; padding:12px; border-radius:8px; color:white; font-weight:600; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;">
-                                    <span>🎥</span> Generate Video
+                            <div style="padding:15px; display:flex; gap:10px;">
+                                <button class="generate-video-btn" onclick="generateVideo('hook')" style="flex:1; background:linear-gradient(90deg, var(--primary-purple), var(--primary-pink)); border:none; padding:12px; border-radius:8px; color:white; font-weight:600; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;">
+                                    <span>🎥</span> Generate
+                                </button>
+                                <button onclick="downloadVideo('hook')" style="padding:12px 16px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:8px; color:white; cursor:pointer; display:flex; align-items:center; justify-content:center;">
+                                    <span>⬇️</span>
                                 </button>
                             </div>
                         </div>
@@ -4076,9 +4082,12 @@
                                 </div>
                                 <video id="video-offer" style="width:100%; height:100%; display:none;" controls></video>
                             </div>
-                            <div style="padding:15px;">
-                                <button class="generate-video-btn" onclick="generateVideo('offer')" style="width:100%; background:linear-gradient(90deg, var(--primary-purple), var(--primary-pink)); border:none; padding:12px; border-radius:8px; color:white; font-weight:600; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;">
-                                    <span>🎥</span> Generate Video
+                            <div style="padding:15px; display:flex; gap:10px;">
+                                <button class="generate-video-btn" onclick="generateVideo('offer')" style="flex:1; background:linear-gradient(90deg, var(--primary-purple), var(--primary-pink)); border:none; padding:12px; border-radius:8px; color:white; font-weight:600; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;">
+                                    <span>🎥</span> Generate
+                                </button>
+                                <button onclick="downloadVideo('offer')" style="padding:12px 16px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:8px; color:white; cursor:pointer; display:flex; align-items:center; justify-content:center;">
+                                    <span>⬇️</span>
                                 </button>
                             </div>
                         </div>
@@ -4096,15 +4105,18 @@
                                 </div>
                                 <video id="video-edu" style="width:100%; height:100%; display:none;" controls></video>
                             </div>
-                            <div style="padding:15px;">
-                                <button class="generate-video-btn" onclick="generateVideo('edu')" style="width:100%; background:linear-gradient(90deg, var(--primary-purple), var(--primary-pink)); border:none; padding:12px; border-radius:8px; color:white; font-weight:600; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;">
-                                    <span>🎥</span> Generate Video
+                            <div style="padding:15px; display:flex; gap:10px;">
+                                <button class="generate-video-btn" onclick="generateVideo('edu')" style="flex:1; background:linear-gradient(90deg, var(--primary-purple), var(--primary-pink)); border:none; padding:12px; border-radius:8px; color:white; font-weight:600; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;">
+                                    <span>🎥</span> Generate
+                                </button>
+                                <button onclick="downloadVideo('edu')" style="padding:12px 16px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:8px; color:white; cursor:pointer; display:flex; align-items:center; justify-content:center;">
+                                    <span>⬇️</span>
                                 </button>
                             </div>
                         </div>
                     </div>
                     <div style="margin-top:15px; padding:12px; background:rgba(188,19,254,0.1); border:1px solid rgba(188,19,254,0.2); border-radius:8px; font-size:12px; color:#aaa;">
-                        <strong style="color:var(--primary-purple);">Note:</strong> Video generation uses Runway AI and takes ~1-2 minutes per video. Videos are generated from your first image in each category.
+                        <strong style="color:var(--primary-purple);">Note:</strong> Video generation uses Runway AI and takes ~1-2 minutes per video.
                     </div>
                 </div>
             </div>
@@ -4113,7 +4125,7 @@
             <div class="results-bulk-bar" id="resultsBulkBar">
                 <span class="results-bulk-count"><span id="resultsSelectedCount">0</span> Selected</span>
                 <button class="results-bulk-btn" onclick="openModal('campaignModal')"><span>📁</span> Add to Campaign</button>
-                <button class="results-bulk-btn" onclick="showToast('success', 'Downloaded', 'Assets saved to Gallery')"><span>⬇️</span> Download</button>
+                <button class="results-bulk-btn" onclick="downloadAllImages()"><span>⬇️</span> Download All</button>
                 <button class="results-bulk-btn" onclick="showToast('info', 'Copied', 'Assets copied to clipboard')"><span>📋</span> Copy All</button>
                 <button class="results-bulk-btn" onclick="openModal('regenerateModal')"><span>🔄</span> Regenerate</button>
                 <button style="background:transparent; border:none; color:rgba(255,255,255,0.6); font-size:18px; cursor:pointer; margin-left:10px;" onclick="clearResultSelection()">×</button>
@@ -6575,6 +6587,101 @@
                 closeLightbox();
             }
         });
+
+        // ============ IMAGE DOWNLOAD FUNCTIONS ============
+        async function downloadImage(zone, index) {
+            // Get the image URL from generatedAssets
+            const typeMap = { hooks: 'hook', offers: 'offer', edu: 'educational' };
+            const assetType = typeMap[zone];
+
+            // Find the matching asset
+            const assets = generatedAssets.filter(a => a.type === assetType);
+            if (!assets[index] || !assets[index].url) {
+                showToast('error', 'No Image', 'Generate images first');
+                return;
+            }
+
+            const imageUrl = assets[index].url;
+            const filename = 'sologenix-' + zone + '-' + (index + 1) + '.png';
+
+            try {
+                showToast('info', 'Downloading...', 'Preparing your image');
+
+                // Fetch the image as a blob
+                const response = await fetch(imageUrl);
+                const blob = await response.blob();
+
+                // Create download link
+                const url = window.URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = filename;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                window.URL.revokeObjectURL(url);
+
+                showToast('success', 'Downloaded!', filename + ' saved');
+            } catch (error) {
+                console.error('Download failed:', error);
+                // Fallback: open in new tab
+                window.open(imageUrl, '_blank');
+                showToast('info', 'Opened in New Tab', 'Right-click to save the image');
+            }
+        }
+
+        async function downloadZoneImages(zone) {
+            const typeMap = { hooks: 'hook', offers: 'offer', edu: 'educational' };
+            const assetType = typeMap[zone];
+            const assets = generatedAssets.filter(a => a.type === assetType);
+
+            if (assets.length === 0) {
+                showToast('error', 'No Images', 'Generate images first');
+                return;
+            }
+
+            showToast('info', 'Downloading...', 'Preparing ' + assets.length + ' images');
+
+            for (let i = 0; i < assets.length; i++) {
+                await downloadImage(zone, i);
+                // Small delay between downloads
+                await new Promise(r => setTimeout(r, 500));
+            }
+        }
+
+        async function downloadAllImages() {
+            if (generatedAssets.length === 0) {
+                showToast('error', 'No Images', 'Generate images first');
+                return;
+            }
+
+            showToast('info', 'Downloading...', 'Preparing ' + generatedAssets.length + ' images');
+
+            const zones = ['hooks', 'offers', 'edu'];
+            for (const zone of zones) {
+                await downloadZoneImages(zone);
+            }
+
+            showToast('success', 'Complete!', 'All images downloaded');
+        }
+
+        // ============ VIDEO DOWNLOAD FUNCTION ============
+        function downloadVideo(type) {
+            const videoEl = document.getElementById('video-' + type);
+            if (!videoEl || !videoEl.src || videoEl.style.display === 'none') {
+                showToast('error', 'No Video', 'Generate a video first');
+                return;
+            }
+
+            const link = document.createElement('a');
+            link.href = videoEl.src;
+            link.download = 'sologenix-' + type + '-video.mp4';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            showToast('success', 'Downloaded!', 'Video saved');
+        }
 
         // TOAST NOTIFICATIONS
         function showToast(type, title, message) {
