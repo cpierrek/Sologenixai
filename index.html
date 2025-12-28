@@ -6428,6 +6428,11 @@
             document.getElementById('view-' + viewId).style.display = 'block';
             setTimeout(() => document.getElementById('view-' + viewId).classList.add('active'), 10);
             const nav = document.getElementById('nav-' + viewId); if(nav) nav.classList.add('active');
+
+            // Load campaigns when navigating to history
+            if (viewId === 'history' && typeof loadCampaigns === 'function') {
+                loadCampaigns();
+            }
         }
 
         // Alias for auth.js compatibility
@@ -7559,21 +7564,321 @@
             document.querySelector('.select-all-btn').textContent = allSelected ? 'Select All (14)' : 'Deselect All';
         }
 
-        function saveToCampaign() {
+        async function saveToCampaign() {
+            // Check if user is authenticated
+            if (!authState.isAuthenticated || !authState.user) {
+                showToast('error', 'Not Logged In', 'Please log in to save campaigns');
+                closeModal('campaignModal');
+                return;
+            }
+
+            // Get campaign details from modal
             const selectedFolder = document.querySelector('.folder-card.selected .folder-info h4');
             const newCampaignName = document.getElementById('newCampaignName').value;
             const campaignName = newCampaignName || (selectedFolder ? selectedFolder.textContent : 'New Campaign');
 
+            // Get selected color and icon
+            const selectedColor = document.querySelector('.color-option.selected');
+            const selectedIcon = document.querySelector('.icon-option.selected');
+            const color = selectedColor ? selectedColor.style.background : '#00f3ff';
+            const icon = selectedIcon ? selectedIcon.textContent : '📁';
+
+            // Get product info
+            const productName = document.getElementById('resultsProductName')?.textContent || document.getElementById('pName')?.value || 'Product';
+            const productDesc = document.getElementById('pDesc')?.value || '';
+
+            // Check if we have assets to save
+            if (generatedAssets.length === 0) {
+                showToast('error', 'No Assets', 'Generate content first before saving');
+                closeModal('campaignModal');
+                return;
+            }
+
             closeModal('campaignModal');
 
+            // Show saving overlay
             document.getElementById('genOverlayTitle').textContent = 'Saving to Campaign...';
             document.getElementById('genOverlaySubtitle').textContent = 'Organizing your assets';
             document.getElementById('generatingOverlay').classList.add('active');
 
-            setTimeout(() => {
+            try {
+                // Count assets by type
+                const hooksCount = generatedAssets.filter(a => a.type === 'hook').length;
+                const offersCount = generatedAssets.filter(a => a.type === 'offer').length;
+                const eduCount = generatedAssets.filter(a => a.type === 'educational').length;
+                const videosCount = generatedAssets.filter(a => a.type === 'video').length;
+
+                // Save to Supabase
+                const { data, error } = await supabaseClient
+                    .from('campaigns')
+                    .insert({
+                        user_id: authState.user.id,
+                        name: campaignName,
+                        product_name: productName,
+                        product_description: productDesc,
+                        color: color,
+                        icon: icon,
+                        assets: generatedAssets,
+                        hooks_count: hooksCount,
+                        offers_count: offersCount,
+                        edu_count: eduCount,
+                        videos_count: videosCount
+                    })
+                    .select()
+                    .single();
+
                 document.getElementById('generatingOverlay').classList.remove('active');
-                showToast('success', 'Saved to Campaign!', `14 assets added to "${campaignName}"`);
-            }, 2000);
+
+                if (error) {
+                    console.error('Save campaign error:', error);
+                    showToast('error', 'Save Failed', error.message || 'Could not save campaign');
+                    return;
+                }
+
+                showToast('success', 'Saved to Campaign!', `${generatedAssets.length} assets added to "${campaignName}"`);
+
+                // Refresh campaigns list if on history page
+                if (document.getElementById('view-history').style.display !== 'none') {
+                    loadCampaigns();
+                }
+
+            } catch (err) {
+                document.getElementById('generatingOverlay').classList.remove('active');
+                console.error('Save campaign error:', err);
+                showToast('error', 'Save Failed', 'An unexpected error occurred');
+            }
+        }
+
+        // Load campaigns from Supabase
+        async function loadCampaigns() {
+            if (!authState.isAuthenticated || !authState.user || !supabaseClient) {
+                return [];
+            }
+
+            try {
+                const { data, error } = await supabaseClient
+                    .from('campaigns')
+                    .select('*')
+                    .eq('user_id', authState.user.id)
+                    .order('created_at', { ascending: false });
+
+                if (error) {
+                    console.error('Load campaigns error:', error);
+                    return [];
+                }
+
+                // Update history view with campaigns
+                renderHistoryTimeline(data || []);
+
+                // Update existing campaigns list in modal
+                renderCampaignsList(data || []);
+
+                return data || [];
+            } catch (err) {
+                console.error('Load campaigns error:', err);
+                return [];
+            }
+        }
+
+        // Render campaigns in the history timeline
+        function renderHistoryTimeline(campaigns) {
+            const timelineContent = document.querySelector('.timeline-content');
+            if (!timelineContent) return;
+
+            if (campaigns.length === 0) {
+                timelineContent.innerHTML = `
+                    <div style="text-align:center; padding:60px 20px; color:#888;">
+                        <div style="font-size:48px; margin-bottom:20px;">📁</div>
+                        <h3 style="color:white; margin-bottom:10px;">No Campaigns Yet</h3>
+                        <p>Generate your first campaign and save it to see it here.</p>
+                        <button class="primary-btn" style="margin-top:20px;" onclick="navigateTo('generator')">
+                            Create Campaign
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            // Group campaigns by date
+            const grouped = {};
+            campaigns.forEach(campaign => {
+                const date = new Date(campaign.created_at);
+                const today = new Date();
+                const yesterday = new Date(today);
+                yesterday.setDate(yesterday.getDate() - 1);
+
+                let dateKey;
+                if (date.toDateString() === today.toDateString()) {
+                    dateKey = 'Today - ' + date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+                } else if (date.toDateString() === yesterday.toDateString()) {
+                    dateKey = 'Yesterday - ' + date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+                } else {
+                    dateKey = date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+                }
+
+                if (!grouped[dateKey]) grouped[dateKey] = [];
+                grouped[dateKey].push(campaign);
+            });
+
+            // Render grouped timeline
+            let html = '';
+            for (const [dateKey, dateCampaigns] of Object.entries(grouped)) {
+                html += `<div class="timeline-date-group"><div class="timeline-date">${dateKey}</div>`;
+
+                dateCampaigns.forEach(campaign => {
+                    const time = new Date(campaign.created_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+                    const totalAssets = (campaign.hooks_count || 0) + (campaign.offers_count || 0) + (campaign.edu_count || 0) + (campaign.videos_count || 0);
+                    const thumbUrl = campaign.assets?.[0]?.url || 'https://images.unsplash.com/photo-1611080626919-7cf5a9dbab5b?w=100';
+
+                    html += `
+                        <div class="timeline-item" data-campaign-id="${campaign.id}">
+                            <div class="timeline-thumb"><img src="${thumbUrl}" alt="" onerror="this.src='https://via.placeholder.com/100'"></div>
+                            <div class="timeline-info">
+                                <div class="timeline-title">${campaign.name} <span class="status-badge completed">Completed</span></div>
+                                <div class="timeline-details">
+                                    <div class="timeline-detail"><span>🎨</span> ${totalAssets} assets</div>
+                                    ${campaign.hooks_count ? `<div class="timeline-detail"><span>🛑</span> ${campaign.hooks_count} Hooks</div>` : ''}
+                                    ${campaign.offers_count ? `<div class="timeline-detail"><span>💰</span> ${campaign.offers_count} Offers</div>` : ''}
+                                    ${campaign.edu_count ? `<div class="timeline-detail"><span>📚</span> ${campaign.edu_count} Edu</div>` : ''}
+                                    ${campaign.videos_count ? `<div class="timeline-detail"><span>🎥</span> ${campaign.videos_count} Videos</div>` : ''}
+                                </div>
+                            </div>
+                            <div class="timeline-actions">
+                                <button class="timeline-action" onclick="loadCampaignToResults('${campaign.id}')">View</button>
+                                <button class="timeline-action" onclick="deleteCampaign('${campaign.id}')">Delete</button>
+                            </div>
+                            <div class="timeline-time">${time}</div>
+                        </div>
+                    `;
+                });
+
+                html += `</div>`;
+            }
+
+            timelineContent.innerHTML = html;
+
+            // Update stats
+            updateHistoryStats(campaigns);
+        }
+
+        // Update history stats
+        function updateHistoryStats(campaigns) {
+            const totalCampaigns = campaigns.length;
+            let totalImages = 0;
+            let totalVideos = 0;
+
+            campaigns.forEach(c => {
+                totalImages += (c.hooks_count || 0) + (c.offers_count || 0) + (c.edu_count || 0);
+                totalVideos += (c.videos_count || 0);
+            });
+
+            const statValues = document.querySelectorAll('.history-stat-value');
+            if (statValues.length >= 3) {
+                statValues[0].textContent = totalCampaigns;
+                statValues[1].textContent = totalImages;
+                statValues[2].textContent = totalVideos;
+            }
+        }
+
+        // Render campaigns list in modal
+        function renderCampaignsList(campaigns) {
+            const foldersGrid = document.querySelector('#campaign-tab-existing .folders-grid');
+            if (!foldersGrid) return;
+
+            let html = '';
+            campaigns.slice(0, 4).forEach(campaign => {
+                const date = new Date(campaign.created_at);
+                const daysAgo = Math.floor((new Date() - date) / (1000 * 60 * 60 * 24));
+                const timeAgo = daysAgo === 0 ? 'Today' : daysAgo === 1 ? 'Yesterday' : `${daysAgo} days ago`;
+                const totalAssets = (campaign.hooks_count || 0) + (campaign.offers_count || 0) + (campaign.edu_count || 0) + (campaign.videos_count || 0);
+
+                html += `
+                    <div class="folder-card" onclick="selectCampaignFolder(this)" data-campaign-id="${campaign.id}">
+                        <div class="folder-icon" style="background: ${campaign.color}22;">${campaign.icon}</div>
+                        <div class="folder-info"><h4>${campaign.name}</h4><p>${totalAssets} assets • ${timeAgo}</p></div>
+                        <div class="folder-check"></div>
+                    </div>
+                `;
+            });
+
+            html += `
+                <div class="create-folder-card" onclick="switchCampaignTab('new', document.querySelectorAll('.campaign-tab')[1])">
+                    <div class="create-icon">+</div>
+                    <div class="folder-info"><h4 style="color:var(--primary-purple);">Create New Campaign</h4><p>Start fresh with a new folder</p></div>
+                </div>
+            `;
+
+            foldersGrid.innerHTML = html;
+        }
+
+        // Load campaign to results view
+        async function loadCampaignToResults(campaignId) {
+            if (!supabaseClient) return;
+
+            try {
+                const { data, error } = await supabaseClient
+                    .from('campaigns')
+                    .select('*')
+                    .eq('id', campaignId)
+                    .single();
+
+                if (error || !data) {
+                    showToast('error', 'Load Failed', 'Could not load campaign');
+                    return;
+                }
+
+                // Restore generated assets
+                generatedAssets = data.assets || [];
+
+                // Update product name
+                document.getElementById('resultsProductName').textContent = data.product_name;
+
+                // Update result cards with saved images
+                const zones = ['hooks', 'offers', 'edu'];
+                const typeMap = { hooks: 'hook', offers: 'offer', edu: 'educational' };
+
+                zones.forEach(zone => {
+                    const assets = generatedAssets.filter(a => a.type === typeMap[zone]);
+                    assets.forEach((asset, index) => {
+                        if (index < 3) {
+                            updateResultCard(zone, index, asset.url, asset.headline || '', asset.subhead || '');
+                        }
+                    });
+                });
+
+                // Navigate to results
+                navigateTo('results');
+                showToast('success', 'Campaign Loaded', `"${data.name}" loaded successfully`);
+
+            } catch (err) {
+                console.error('Load campaign error:', err);
+                showToast('error', 'Load Failed', 'An unexpected error occurred');
+            }
+        }
+
+        // Delete campaign
+        async function deleteCampaign(campaignId) {
+            if (!confirm('Are you sure you want to delete this campaign?')) return;
+            if (!supabaseClient) return;
+
+            try {
+                const { error } = await supabaseClient
+                    .from('campaigns')
+                    .delete()
+                    .eq('id', campaignId);
+
+                if (error) {
+                    showToast('error', 'Delete Failed', error.message);
+                    return;
+                }
+
+                showToast('success', 'Deleted', 'Campaign removed');
+                loadCampaigns();
+
+            } catch (err) {
+                console.error('Delete campaign error:', err);
+                showToast('error', 'Delete Failed', 'An unexpected error occurred');
+            }
         }
 
         // Campaign Detail View Functions
