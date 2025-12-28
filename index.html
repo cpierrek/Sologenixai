@@ -3731,8 +3731,8 @@
                         <button class="save-campaign-btn" onclick="openModal('campaignModal')">
                             <span>📁</span> Save to Campaign
                         </button>
-                        <button class="primary-btn" onclick="showToast('success', 'Download Started', 'Preparing 14-asset bundle...')">
-                            <span>⬇</span> Download Bundle (14)
+                        <button class="primary-btn" onclick="downloadAllAsZip()">
+                            <span>⬇</span> Download Bundle as ZIP
                         </button>
                     </div>
                 </div>
@@ -6681,6 +6681,89 @@
             showToast('success', 'Complete!', 'All images downloaded');
         }
 
+        // ============ DOWNLOAD ALL AS ZIP ============
+        async function downloadAllAsZip() {
+            const imageAssets = generatedAssets.filter(a => a.type !== 'video');
+
+            if (imageAssets.length === 0) {
+                showToast('error', 'No Images', 'Generate images first');
+                return;
+            }
+
+            showToast('info', 'Preparing ZIP...', 'Fetching ' + imageAssets.length + ' images');
+
+            const zip = new JSZip();
+            const productName = document.getElementById('resultsProductName').textContent || 'Product';
+            const safeName = productName.replace(/[^a-z0-9]/gi, '-').toLowerCase();
+
+            // Create folders for each zone
+            const hooksFolder = zip.folder('hooks');
+            const offersFolder = zip.folder('offers');
+            const eduFolder = zip.folder('educational');
+
+            let successCount = 0;
+            let hookIndex = 1, offerIndex = 1, eduIndex = 1;
+
+            for (const asset of imageAssets) {
+                try {
+                    // Fetch image via proxy
+                    const response = await fetch('/api/download-image', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ imageUrl: asset.url })
+                    });
+
+                    const data = await response.json();
+
+                    if (data.error) {
+                        console.error('Failed to fetch:', asset.url);
+                        continue;
+                    }
+
+                    // Add to appropriate folder
+                    if (asset.type === 'hook') {
+                        hooksFolder.file('hook-' + hookIndex + '.png', data.imageData, { base64: true });
+                        hookIndex++;
+                    } else if (asset.type === 'offer') {
+                        offersFolder.file('offer-' + offerIndex + '.png', data.imageData, { base64: true });
+                        offerIndex++;
+                    } else if (asset.type === 'educational') {
+                        eduFolder.file('educational-' + eduIndex + '.png', data.imageData, { base64: true });
+                        eduIndex++;
+                    }
+
+                    successCount++;
+                } catch (error) {
+                    console.error('Error fetching image:', error);
+                }
+            }
+
+            if (successCount === 0) {
+                showToast('error', 'Failed', 'Could not fetch any images');
+                return;
+            }
+
+            showToast('info', 'Creating ZIP...', successCount + ' images ready');
+
+            // Generate and download ZIP
+            try {
+                const content = await zip.generateAsync({ type: 'blob' });
+                const url = window.URL.createObjectURL(content);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = 'sologenix-' + safeName + '-bundle.zip';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                window.URL.revokeObjectURL(url);
+
+                showToast('success', 'Downloaded!', 'ZIP bundle with ' + successCount + ' images saved');
+            } catch (error) {
+                console.error('ZIP generation failed:', error);
+                showToast('error', 'ZIP Failed', 'Could not create ZIP file');
+            }
+        }
+
         // ============ VIDEO DOWNLOAD FUNCTION ============
         function downloadVideo(type) {
             const videoEl = document.getElementById('video-' + type);
@@ -8363,6 +8446,9 @@
         });
 
     </script>
+
+    <!-- JSZip for bulk downloads -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
     <!-- Supabase SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
