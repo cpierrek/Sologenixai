@@ -5908,24 +5908,9 @@
                         </div>
                     </div>
                     <div class="asset-selection">
-                        <div class="asset-selection-header"><h4>Select Assets to Include</h4><button class="select-all-btn" onclick="toggleAllCampaignAssets()">Select All (14)</button></div>
-                        <div class="asset-zones">
-                            <div class="asset-zone">
-                                <div class="asset-zone-header"><div class="asset-zone-title hook-color"><span>🛑</span> Hooks (3)</div></div>
-                                <div class="asset-thumbs">
-                                    <div class="asset-thumb selected" style="background-image:url('https://images.unsplash.com/photo-1611080626919-7cf5a9dbab5b?q=80&w=200');" onclick="this.classList.toggle('selected')"><div class="asset-thumb-check">✓</div></div>
-                                    <div class="asset-thumb selected" style="background-image:url('https://images.unsplash.com/photo-1556228552-523de509228a?q=80&w=200');" onclick="this.classList.toggle('selected')"><div class="asset-thumb-check">✓</div></div>
-                                    <div class="asset-thumb selected" style="background-image:url('https://images.unsplash.com/photo-1571781565036-d3f7595ca3f7?q=80&w=200');" onclick="this.classList.toggle('selected')"><div class="asset-thumb-check">✓</div></div>
-                                </div>
-                            </div>
-                            <div class="asset-zone">
-                                <div class="asset-zone-header"><div class="asset-zone-title offer-color"><span>💰</span> Offers (3)</div></div>
-                                <div class="asset-thumbs">
-                                    <div class="asset-thumb selected" style="background-image:url('https://images.unsplash.com/photo-1620916566398-39f1143ab7be?q=80&w=200');" onclick="this.classList.toggle('selected')"><div class="asset-thumb-check">✓</div></div>
-                                    <div class="asset-thumb selected" style="background-image:url('https://images.unsplash.com/photo-1608248597279-f99d160bfbc8?q=80&w=200');" onclick="this.classList.toggle('selected')"><div class="asset-thumb-check">✓</div></div>
-                                    <div class="asset-thumb selected" style="background-image:url('https://images.unsplash.com/photo-1556228720-1957be83f315?q=80&w=200');" onclick="this.classList.toggle('selected')"><div class="asset-thumb-check">✓</div></div>
-                                </div>
-                            </div>
+                        <div class="asset-selection-header"><h4>Select Assets to Include</h4><button class="select-all-btn" id="selectAllAssetsBtn" onclick="toggleAllCampaignAssets()">Select All</button></div>
+                        <div class="asset-zones" id="assetSelectionZones">
+                            <!-- Dynamically populated -->
                         </div>
                     </div>
                 </div>
@@ -6565,9 +6550,129 @@
         // MODAL FUNCTIONS
         function openModal(id) {
             document.getElementById(id).classList.add('active');
+            // Populate asset selection when opening campaign modal
+            if (id === 'campaignModal') {
+                populateAssetSelection();
+            }
         }
         function closeModal(id) {
             document.getElementById(id).classList.remove('active');
+        }
+
+        // Populate asset selection in campaign modal
+        function populateAssetSelection() {
+            const container = document.getElementById('assetSelectionZones');
+            if (!container) return;
+
+            if (generatedAssets.length === 0) {
+                container.innerHTML = '<div style="color:#888; padding:20px; text-align:center;">No assets generated yet. Generate content first.</div>';
+                document.getElementById('selectAllAssetsBtn').textContent = 'Select All (0)';
+                return;
+            }
+
+            const zones = [
+                { type: 'hook', label: 'Hooks', icon: '🛑', colorClass: 'hook-color' },
+                { type: 'offer', label: 'Offers', icon: '💰', colorClass: 'offer-color' },
+                { type: 'educational', label: 'Educational', icon: '🧠', colorClass: 'edu-color' },
+                { type: 'video', label: 'Videos', icon: '🎥', colorClass: 'video-color' }
+            ];
+
+            let html = '';
+            let totalAssets = 0;
+
+            zones.forEach(zone => {
+                const assets = generatedAssets.filter(a => a.type === zone.type);
+                if (assets.length === 0) return;
+
+                totalAssets += assets.length;
+
+                html += `
+                    <div class="asset-zone">
+                        <div class="asset-zone-header">
+                            <div class="asset-zone-title ${zone.colorClass}"><span>${zone.icon}</span> ${zone.label} (${assets.length})</div>
+                            <button class="zone-select-btn" onclick="toggleZoneAssets('${zone.type}')" style="background:none; border:1px solid #444; color:#888; padding:4px 8px; border-radius:4px; font-size:11px; cursor:pointer;">Toggle All</button>
+                        </div>
+                        <div class="asset-thumbs" data-zone="${zone.type}">
+                `;
+
+                assets.forEach((asset, index) => {
+                    const thumbStyle = zone.type === 'video'
+                        ? 'background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); display:flex; align-items:center; justify-content:center;'
+                        : `background-image:url('${asset.url}');`;
+
+                    html += `
+                        <div class="asset-thumb selected" data-asset-index="${generatedAssets.indexOf(asset)}" style="${thumbStyle}" onclick="toggleAssetSelection(this)">
+                            ${zone.type === 'video' ? '<span style="font-size:24px;">🎥</span>' : ''}
+                            <div class="asset-thumb-check">✓</div>
+                        </div>
+                    `;
+                });
+
+                html += `
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+            document.getElementById('selectAllAssetsBtn').textContent = `Select All (${totalAssets})`;
+            updateSelectedCount();
+        }
+
+        // Toggle individual asset selection
+        function toggleAssetSelection(thumb) {
+            thumb.classList.toggle('selected');
+            updateSelectedCount();
+        }
+
+        // Toggle all assets in a zone
+        function toggleZoneAssets(type) {
+            const container = document.querySelector(`.asset-thumbs[data-zone="${type}"]`);
+            if (!container) return;
+
+            const thumbs = container.querySelectorAll('.asset-thumb');
+            const allSelected = Array.from(thumbs).every(t => t.classList.contains('selected'));
+
+            thumbs.forEach(thumb => {
+                if (allSelected) {
+                    thumb.classList.remove('selected');
+                } else {
+                    thumb.classList.add('selected');
+                }
+            });
+
+            updateSelectedCount();
+        }
+
+        // Toggle all campaign assets
+        function toggleAllCampaignAssets() {
+            const thumbs = document.querySelectorAll('#assetSelectionZones .asset-thumb');
+            const allSelected = Array.from(thumbs).every(t => t.classList.contains('selected'));
+
+            thumbs.forEach(thumb => {
+                if (allSelected) {
+                    thumb.classList.remove('selected');
+                } else {
+                    thumb.classList.add('selected');
+                }
+            });
+
+            updateSelectedCount();
+        }
+
+        // Update selected count display
+        function updateSelectedCount() {
+            const selected = document.querySelectorAll('#assetSelectionZones .asset-thumb.selected').length;
+            const total = document.querySelectorAll('#assetSelectionZones .asset-thumb').length;
+            const btn = document.getElementById('selectAllAssetsBtn');
+            if (btn) {
+                btn.textContent = selected === total ? `Deselect All (${total})` : `Select All (${total})`;
+            }
+            // Update summary stats
+            const summaryP = document.querySelector('.summary-info p');
+            if (summaryP) {
+                summaryP.textContent = `Ready to save ${selected} assets`;
+            }
         }
 
         // IMAGE LIGHTBOX
@@ -7587,10 +7692,20 @@
             const productName = document.getElementById('resultsProductName')?.textContent || document.getElementById('pName')?.value || 'Product';
             const productDesc = document.getElementById('pDesc')?.value || '';
 
+            // Get selected assets from the modal
+            const selectedThumbs = document.querySelectorAll('#assetSelectionZones .asset-thumb.selected');
+            const selectedAssets = [];
+
+            selectedThumbs.forEach(thumb => {
+                const index = parseInt(thumb.dataset.assetIndex);
+                if (!isNaN(index) && generatedAssets[index]) {
+                    selectedAssets.push(generatedAssets[index]);
+                }
+            });
+
             // Check if we have assets to save
-            if (generatedAssets.length === 0) {
-                showToast('error', 'No Assets', 'Generate content first before saving');
-                closeModal('campaignModal');
+            if (selectedAssets.length === 0) {
+                showToast('error', 'No Assets Selected', 'Select at least one asset to save');
                 return;
             }
 
@@ -7602,11 +7717,11 @@
             document.getElementById('generatingOverlay').classList.add('active');
 
             try {
-                // Count assets by type
-                const hooksCount = generatedAssets.filter(a => a.type === 'hook').length;
-                const offersCount = generatedAssets.filter(a => a.type === 'offer').length;
-                const eduCount = generatedAssets.filter(a => a.type === 'educational').length;
-                const videosCount = generatedAssets.filter(a => a.type === 'video').length;
+                // Count selected assets by type
+                const hooksCount = selectedAssets.filter(a => a.type === 'hook').length;
+                const offersCount = selectedAssets.filter(a => a.type === 'offer').length;
+                const eduCount = selectedAssets.filter(a => a.type === 'educational').length;
+                const videosCount = selectedAssets.filter(a => a.type === 'video').length;
 
                 // Save to Supabase
                 const { data, error } = await supabaseClient
@@ -7618,7 +7733,7 @@
                         product_description: productDesc,
                         color: color,
                         icon: icon,
-                        assets: generatedAssets,
+                        assets: selectedAssets,
                         hooks_count: hooksCount,
                         offers_count: offersCount,
                         edu_count: eduCount,
@@ -7635,7 +7750,7 @@
                     return;
                 }
 
-                showToast('success', 'Saved to Campaign!', `${generatedAssets.length} assets added to "${campaignName}"`);
+                showToast('success', 'Saved to Campaign!', `${selectedAssets.length} assets added to "${campaignName}"`);
 
                 // Refresh campaigns list if on history page
                 if (document.getElementById('view-history').style.display !== 'none') {
