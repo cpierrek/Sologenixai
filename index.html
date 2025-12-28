@@ -6429,8 +6429,8 @@
             setTimeout(() => document.getElementById('view-' + viewId).classList.add('active'), 10);
             const nav = document.getElementById('nav-' + viewId); if(nav) nav.classList.add('active');
 
-            // Load campaigns when navigating to history
-            if (viewId === 'history' && typeof loadCampaigns === 'function') {
+            // Load campaigns when navigating to history or campaigns
+            if ((viewId === 'history' || viewId === 'campaigns') && typeof loadCampaigns === 'function') {
                 loadCampaigns();
             }
         }
@@ -7673,6 +7673,9 @@
                 // Update existing campaigns list in modal
                 renderCampaignsList(data || []);
 
+                // Update campaigns grid page
+                renderCampaignsGrid(data || []);
+
                 return data || [];
             } catch (err) {
                 console.error('Load campaigns error:', err);
@@ -7809,6 +7812,175 @@
             `;
 
             foldersGrid.innerHTML = html;
+        }
+
+        // Render campaigns grid on Campaigns page
+        function renderCampaignsGrid(campaigns) {
+            const grid = document.getElementById('campaignsGrid');
+            if (!grid) return;
+
+            // Start with the "Create New" card
+            let html = `
+                <div class="campaign-card new" onclick="navigateTo('generator')">
+                    <div class="plus-icon">+</div>
+                    <div style="font-weight:600; color:white;">Create New Campaign</div>
+                    <div style="font-size:12px; color:#888; margin-top:5px;">Start a new batch of assets</div>
+                </div>
+            `;
+
+            if (campaigns.length === 0) {
+                grid.innerHTML = html;
+                return;
+            }
+
+            campaigns.forEach(campaign => {
+                const totalAssets = (campaign.hooks_count || 0) + (campaign.offers_count || 0) + (campaign.edu_count || 0) + (campaign.videos_count || 0);
+                const thumbUrl = campaign.assets?.[0]?.url || '';
+                const date = new Date(campaign.created_at);
+                const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+                html += `
+                    <div class="campaign-card" onclick="openCampaignDetailView('${campaign.id}')" style="cursor:pointer;">
+                        <div class="campaign-thumb" style="height:120px; background:${thumbUrl ? `url('${thumbUrl}') center/cover` : 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)'}; border-radius:8px; margin-bottom:12px; display:flex; align-items:center; justify-content:center;">
+                            ${!thumbUrl ? `<span style="font-size:32px;">${campaign.icon || '📁'}</span>` : ''}
+                        </div>
+                        <div style="font-weight:600; color:white; margin-bottom:4px;">${campaign.name}</div>
+                        <div style="font-size:12px; color:#888;">${totalAssets} assets • ${dateStr}</div>
+                        <div style="display:flex; gap:8px; margin-top:10px;">
+                            <span style="font-size:11px; background:rgba(255,255,255,0.1); padding:3px 8px; border-radius:4px;">${campaign.hooks_count || 0} hooks</span>
+                            <span style="font-size:11px; background:rgba(255,255,255,0.1); padding:3px 8px; border-radius:4px;">${campaign.offers_count || 0} offers</span>
+                            <span style="font-size:11px; background:rgba(255,255,255,0.1); padding:3px 8px; border-radius:4px;">${campaign.videos_count || 0} videos</span>
+                        </div>
+                    </div>
+                `;
+            });
+
+            grid.innerHTML = html;
+        }
+
+        // Open campaign detail view
+        async function openCampaignDetailView(campaignId) {
+            if (!supabaseClient) return;
+
+            try {
+                const { data, error } = await supabaseClient
+                    .from('campaigns')
+                    .select('*')
+                    .eq('id', campaignId)
+                    .single();
+
+                if (error || !data) {
+                    showToast('error', 'Load Failed', 'Could not load campaign');
+                    return;
+                }
+
+                // Update detail header
+                document.getElementById('detailCampaignName').textContent = data.name;
+                document.getElementById('detailCampaignIcon').textContent = data.icon || '📁';
+                document.getElementById('detailCampaignIcon').style.background = (data.color || '#00f3ff') + '22';
+
+                // Update stats
+                const totalAssets = (data.hooks_count || 0) + (data.offers_count || 0) + (data.edu_count || 0) + (data.videos_count || 0);
+                const statItems = document.querySelectorAll('#campaigns-detail-view .campaign-stat-item .value');
+                if (statItems.length >= 3) {
+                    statItems[0].textContent = totalAssets;
+                    statItems[1].textContent = (data.hooks_count || 0) + (data.offers_count || 0) + (data.edu_count || 0);
+                    statItems[2].textContent = data.videos_count || 0;
+                }
+
+                // Render assets in zones
+                renderCampaignDetailAssets(data.assets || [], data.id);
+
+                // Show detail view, hide grid
+                document.getElementById('campaigns-grid-view').style.display = 'none';
+                document.getElementById('campaigns-detail-view').style.display = 'block';
+
+            } catch (err) {
+                console.error('Load campaign detail error:', err);
+                showToast('error', 'Load Failed', 'An unexpected error occurred');
+            }
+        }
+
+        // Render assets in campaign detail view
+        function renderCampaignDetailAssets(assets, campaignId) {
+            const zones = {
+                hooks: { selector: '#campaign-zone-hooks .campaign-content-grid', type: 'hook' },
+                offers: { selector: '#campaign-zone-offers .campaign-content-grid', type: 'offer' },
+                edu: { selector: '#campaign-zone-edu .campaign-content-grid', type: 'educational' }
+            };
+
+            for (const [zone, config] of Object.entries(zones)) {
+                const grid = document.querySelector(config.selector);
+                if (!grid) continue;
+
+                const zoneAssets = assets.filter(a => a.type === config.type);
+
+                if (zoneAssets.length === 0) {
+                    grid.innerHTML = '<div style="color:#888; padding:20px;">No assets in this zone</div>';
+                    continue;
+                }
+
+                let html = '';
+                zoneAssets.forEach((asset, index) => {
+                    html += `
+                        <div class="campaign-asset-card">
+                            <div class="campaign-asset-thumb" style="background-image:url('${asset.url}');">
+                                <div class="campaign-asset-overlay">
+                                    <div class="campaign-asset-actions">
+                                        <div class="campaign-asset-btn" onclick="openLightbox(event, '${asset.url}')">👁</div>
+                                        <div class="campaign-asset-btn" onclick="event.stopPropagation(); downloadFromUrl('${asset.url}', '${zone}-${index + 1}.png')">⬇️</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="campaign-asset-info">
+                                <div class="campaign-asset-name">${asset.headline || zone + '_' + (index + 1) + '.jpg'}</div>
+                                <div class="campaign-asset-meta">1080x1350 • AI Generated</div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                grid.innerHTML = html;
+            }
+        }
+
+        // Download from URL helper
+        async function downloadFromUrl(url, filename) {
+            try {
+                showToast('info', 'Downloading...', 'Preparing your file');
+                const response = await fetch('/api/download-image', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ imageUrl: url })
+                });
+                const data = await response.json();
+                if (data.error) throw new Error(data.error);
+
+                const byteCharacters = atob(data.imageData);
+                const byteNumbers = new Array(byteCharacters.length);
+                for (let i = 0; i < byteCharacters.length; i++) {
+                    byteNumbers[i] = byteCharacters.charCodeAt(i);
+                }
+                const byteArray = new Uint8Array(byteNumbers);
+                const blob = new Blob([byteArray], { type: data.contentType });
+                const blobUrl = window.URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = blobUrl;
+                link.download = filename;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                window.URL.revokeObjectURL(blobUrl);
+                showToast('success', 'Downloaded!', filename);
+            } catch (err) {
+                showToast('error', 'Download Failed', err.message);
+            }
+        }
+
+        // Close campaign detail and go back to grid
+        function closeCampaignDetail() {
+            document.getElementById('campaigns-detail-view').style.display = 'none';
+            document.getElementById('campaigns-grid-view').style.display = 'block';
         }
 
         // Load campaign to results view
