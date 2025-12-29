@@ -6553,6 +6553,11 @@
             // Populate asset selection when opening campaign modal
             if (id === 'campaignModal') {
                 populateAssetSelection();
+                // Switch to Organize Assets tab by default so users can see their selections
+                const organizeTab = document.querySelectorAll('.campaign-tab')[2];
+                if (organizeTab) {
+                    switchCampaignTab('organize', organizeTab);
+                }
             }
         }
         function closeModal(id) {
@@ -7696,32 +7701,114 @@
             const selectedThumbs = document.querySelectorAll('#assetSelectionZones .asset-thumb.selected');
             const selectedAssets = [];
 
+            console.log('Found selected thumbs:', selectedThumbs.length);
+
             selectedThumbs.forEach(thumb => {
                 const index = parseInt(thumb.dataset.assetIndex);
+                console.log('Thumb index:', index, 'Asset:', generatedAssets[index]);
                 if (!isNaN(index) && generatedAssets[index]) {
-                    selectedAssets.push(generatedAssets[index]);
+                    selectedAssets.push({...generatedAssets[index]});
                 }
             });
 
+            console.log('Selected assets to save:', selectedAssets.length);
+
             // Check if we have assets to save
             if (selectedAssets.length === 0) {
-                showToast('error', 'No Assets Selected', 'Select at least one asset to save');
+                showToast('error', 'No Assets Selected', 'Go to "Organize Assets" tab and select images to save');
                 return;
             }
 
             closeModal('campaignModal');
 
             // Show saving overlay
-            document.getElementById('genOverlayTitle').textContent = 'Saving to Campaign...';
-            document.getElementById('genOverlaySubtitle').textContent = 'Organizing your assets';
+            document.getElementById('genOverlayTitle').textContent = 'Uploading Images...';
+            document.getElementById('genOverlaySubtitle').textContent = `Saving ${selectedAssets.length} assets permanently`;
             document.getElementById('generatingOverlay').classList.add('active');
 
             try {
-                // Count selected assets by type
-                const hooksCount = selectedAssets.filter(a => a.type === 'hook').length;
-                const offersCount = selectedAssets.filter(a => a.type === 'offer').length;
-                const eduCount = selectedAssets.filter(a => a.type === 'educational').length;
-                const videosCount = selectedAssets.filter(a => a.type === 'video').length;
+                // Upload each image to Supabase Storage for permanent URLs
+                const permanentAssets = [];
+
+                for (let i = 0; i < selectedAssets.length; i++) {
+                    const asset = selectedAssets[i];
+
+                    // Skip videos for now (handle separately if needed)
+                    if (asset.type === 'video') {
+                        permanentAssets.push(asset);
+                        continue;
+                    }
+
+                    document.getElementById('genOverlaySubtitle').textContent = `Uploading image ${i + 1} of ${selectedAssets.length}...`;
+
+                    try {
+                        // Fetch image via proxy
+                        const response = await fetch('/api/download-image', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ imageUrl: asset.url })
+                        });
+
+                        const data = await response.json();
+
+                        if (data.error) {
+                            console.error('Failed to fetch image:', data.error);
+                            permanentAssets.push(asset); // Keep original URL as fallback
+                            continue;
+                        }
+
+                        // Convert base64 to blob
+                        const byteCharacters = atob(data.imageData);
+                        const byteNumbers = new Array(byteCharacters.length);
+                        for (let j = 0; j < byteCharacters.length; j++) {
+                            byteNumbers[j] = byteCharacters.charCodeAt(j);
+                        }
+                        const byteArray = new Uint8Array(byteNumbers);
+                        const blob = new Blob([byteArray], { type: data.contentType || 'image/png' });
+
+                        // Generate unique filename
+                        const timestamp = Date.now();
+                        const filename = `${authState.user.id}/${timestamp}-${asset.type}-${i}.png`;
+
+                        // Upload to Supabase Storage
+                        const { data: uploadData, error: uploadError } = await supabaseClient.storage
+                            .from('campaign-images')
+                            .upload(filename, blob, {
+                                contentType: 'image/png',
+                                upsert: true
+                            });
+
+                        if (uploadError) {
+                            console.error('Upload error:', uploadError);
+                            permanentAssets.push(asset); // Keep original URL as fallback
+                            continue;
+                        }
+
+                        // Get public URL
+                        const { data: urlData } = supabaseClient.storage
+                            .from('campaign-images')
+                            .getPublicUrl(filename);
+
+                        // Create asset with permanent URL
+                        permanentAssets.push({
+                            ...asset,
+                            url: urlData.publicUrl,
+                            originalUrl: asset.url
+                        });
+
+                    } catch (uploadErr) {
+                        console.error('Image upload failed:', uploadErr);
+                        permanentAssets.push(asset); // Keep original URL as fallback
+                    }
+                }
+
+                document.getElementById('genOverlaySubtitle').textContent = 'Saving campaign...';
+
+                // Count assets by type
+                const hooksCount = permanentAssets.filter(a => a.type === 'hook').length;
+                const offersCount = permanentAssets.filter(a => a.type === 'offer').length;
+                const eduCount = permanentAssets.filter(a => a.type === 'educational').length;
+                const videosCount = permanentAssets.filter(a => a.type === 'video').length;
 
                 // Save to Supabase
                 const { data, error } = await supabaseClient
@@ -7733,7 +7820,7 @@
                         product_description: productDesc,
                         color: color,
                         icon: icon,
-                        assets: selectedAssets,
+                        assets: permanentAssets,
                         hooks_count: hooksCount,
                         offers_count: offersCount,
                         edu_count: eduCount,
@@ -7750,12 +7837,10 @@
                     return;
                 }
 
-                showToast('success', 'Saved to Campaign!', `${selectedAssets.length} assets added to "${campaignName}"`);
+                showToast('success', 'Saved to Campaign!', `${permanentAssets.length} assets added to "${campaignName}"`);
 
-                // Refresh campaigns list if on history page
-                if (document.getElementById('view-history').style.display !== 'none') {
-                    loadCampaigns();
-                }
+                // Refresh campaigns list
+                loadCampaigns();
 
             } catch (err) {
                 document.getElementById('generatingOverlay').classList.remove('active');
