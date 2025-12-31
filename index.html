@@ -2510,6 +2510,21 @@
             <a href="#">Terms</a> • <a href="#">Privacy</a>
         </div>
 
+        <!-- Credits Display -->
+        <div class="credits-bar" style="background: rgba(0,243,255,0.1); border: 1px solid rgba(0,243,255,0.3); border-radius: 10px; padding: 12px; margin: 0 15px 15px 15px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                <span style="font-size:12px; color:#888;">Credits Remaining</span>
+                <span id="creditsCount" style="font-size:14px; font-weight:700; color:#00f3ff;">100</span>
+            </div>
+            <div style="background:rgba(255,255,255,0.1); border-radius:4px; height:6px; overflow:hidden;">
+                <div id="creditsProgressBar" style="background: linear-gradient(90deg, #00f3ff, #bc13fe); height:100%; width:100%; transition: width 0.3s;"></div>
+            </div>
+            <div style="display:flex; justify-content:space-between; margin-top:6px;">
+                <span style="font-size:10px; color:#666;">0</span>
+                <span style="font-size:10px; color:#666;">100</span>
+            </div>
+        </div>
+
         <div class="user-profile" onclick="toggleUserMenu()">
             <div class="avatar" style="display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px;">CP</div>
             <div style="font-size:13px; font-weight:600;"><span class="user-name">Christopher P.</span><br><span class="user-plan" style="font-size:11px; color:#888;">Creator Plan</span></div>
@@ -7221,6 +7236,14 @@
                 return;
             }
 
+            // Check credits before generating
+            const campaignCost = calculateCampaignCost();
+            if (!hasEnoughCredits(campaignCost)) {
+                showToast('error', 'Not Enough Credits', `You need ${campaignCost} credits. You have ${userCredits}.`);
+                openModal('upgradeModal');
+                return;
+            }
+
             document.getElementById('resultsProductName').textContent = productName;
             generatedAssets = [];
 
@@ -7338,7 +7361,12 @@
                 } else {
                     successMsg = '3 scripts + 3 videos created';
                 }
-                showToast('success', 'Campaign Generated!', successMsg);
+
+                // Deduct credits after successful generation
+                const creditsUsed = calculateCampaignCost();
+                await deductCredits(creditsUsed);
+
+                showToast('success', 'Campaign Generated!', successMsg + ` (${creditsUsed} credits used)`);
 
             } catch (error) {
                 console.error('Campaign generation failed:', error);
@@ -9193,6 +9221,176 @@
             var avatarEl = document.querySelector('.user-profile .avatar');
             if (userNameEl) userNameEl.textContent = fullName;
             if (avatarEl) avatarEl.textContent = initials;
+            // Load user credits
+            loadUserCredits();
+        }
+
+        // ============ CREDITS SYSTEM ============
+        var userCredits = 100; // Default credits
+        var maxCredits = 100;
+
+        // Credit costs
+        var CREDIT_COSTS = {
+            image: 5,      // Per image
+            video: 20,     // Per video
+            script: 2,     // Per script
+            voice: 3       // Per voice generation
+        };
+
+        // Load user credits from Supabase
+        async function loadUserCredits() {
+            if (!supabaseClient || !authState.user) return;
+
+            try {
+                const { data, error } = await supabaseClient
+                    .from('profiles')
+                    .select('credits, plan')
+                    .eq('id', authState.user.id)
+                    .single();
+
+                if (error) {
+                    console.error('Error loading credits:', error);
+                    // If no profile exists, create one
+                    if (error.code === 'PGRST116') {
+                        await createUserProfile();
+                    }
+                    return;
+                }
+
+                if (data) {
+                    userCredits = data.credits || 0;
+                    maxCredits = data.plan === 'pro' ? 500 : 100;
+                    updateCreditsDisplay();
+                    // Update plan display
+                    var planEl = document.querySelector('.user-plan');
+                    if (planEl) planEl.textContent = data.plan === 'pro' ? 'Pro Plan' : 'Free Plan';
+                }
+            } catch (err) {
+                console.error('Error loading credits:', err);
+            }
+        }
+
+        // Create user profile if doesn't exist
+        async function createUserProfile() {
+            if (!supabaseClient || !authState.user) return;
+
+            try {
+                const { error } = await supabaseClient
+                    .from('profiles')
+                    .insert({
+                        id: authState.user.id,
+                        full_name: authState.user.user_metadata?.full_name || '',
+                        credits: 100,
+                        plan: 'free'
+                    });
+
+                if (error) {
+                    console.error('Error creating profile:', error);
+                } else {
+                    userCredits = 100;
+                    updateCreditsDisplay();
+                }
+            } catch (err) {
+                console.error('Error creating profile:', err);
+            }
+        }
+
+        // Update credits display in UI
+        function updateCreditsDisplay() {
+            var creditsEl = document.getElementById('creditsCount');
+            var progressEl = document.getElementById('creditsProgressBar');
+            var dashboardCredits = document.querySelector('.page-title p b');
+
+            if (creditsEl) creditsEl.textContent = userCredits;
+            if (progressEl) {
+                var percentage = Math.min((userCredits / maxCredits) * 100, 100);
+                progressEl.style.width = percentage + '%';
+                // Change color based on credits
+                if (userCredits < 20) {
+                    progressEl.style.background = 'linear-gradient(90deg, #ff4444, #ff6666)';
+                } else if (userCredits < 50) {
+                    progressEl.style.background = 'linear-gradient(90deg, #ffaa00, #ffcc00)';
+                } else {
+                    progressEl.style.background = 'linear-gradient(90deg, #00f3ff, #bc13fe)';
+                }
+            }
+            if (dashboardCredits) dashboardCredits.textContent = userCredits + ' credits';
+        }
+
+        // Check if user has enough credits
+        function hasEnoughCredits(cost) {
+            return userCredits >= cost;
+        }
+
+        // Calculate cost for a campaign
+        function calculateCampaignCost() {
+            var contentType = document.querySelector('.content-card.selected')?.dataset?.type || 'bundle';
+            var cost = 0;
+
+            if (contentType === 'bundle' || contentType === 'images') {
+                cost += 9 * CREDIT_COSTS.image; // 9 images (3 per zone)
+            }
+            if (contentType === 'bundle' || contentType === 'videos') {
+                cost += 3 * CREDIT_COSTS.video; // 3 videos
+            }
+            // Scripts and voices are included
+            cost += 3 * CREDIT_COSTS.script; // 3 scripts
+            cost += 3 * CREDIT_COSTS.voice;  // 3 voices
+
+            return cost;
+        }
+
+        // Deduct credits from user
+        async function deductCredits(amount) {
+            if (!supabaseClient || !authState.user) return false;
+
+            var newCredits = Math.max(userCredits - amount, 0);
+
+            try {
+                const { error } = await supabaseClient
+                    .from('profiles')
+                    .update({ credits: newCredits, updated_at: new Date().toISOString() })
+                    .eq('id', authState.user.id);
+
+                if (error) {
+                    console.error('Error deducting credits:', error);
+                    return false;
+                }
+
+                userCredits = newCredits;
+                updateCreditsDisplay();
+                return true;
+            } catch (err) {
+                console.error('Error deducting credits:', err);
+                return false;
+            }
+        }
+
+        // Add credits to user (for purchases, bonuses, etc.)
+        async function addCredits(amount) {
+            if (!supabaseClient || !authState.user) return false;
+
+            var newCredits = userCredits + amount;
+
+            try {
+                const { error } = await supabaseClient
+                    .from('profiles')
+                    .update({ credits: newCredits, updated_at: new Date().toISOString() })
+                    .eq('id', authState.user.id);
+
+                if (error) {
+                    console.error('Error adding credits:', error);
+                    return false;
+                }
+
+                userCredits = newCredits;
+                updateCreditsDisplay();
+                showToast('success', 'Credits Added', `+${amount} credits added to your account`);
+                return true;
+            } catch (err) {
+                console.error('Error adding credits:', err);
+                return false;
+            }
         }
 
         // Initialize auth
