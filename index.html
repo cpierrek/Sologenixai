@@ -3632,11 +3632,83 @@
         </div>
 
         <!-- OAuth Modal -->
+        <!-- Shopify Connect Modal -->
+        <div id="shopifyModal" class="confirm-modal" onclick="if(event.target===this) closeModal('shopifyModal')">
+            <div class="confirm-box" style="max-width:500px;" onclick="event.stopPropagation()">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <div style="width:40px; height:40px; background:#96bf48; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:20px;">🛍️</div>
+                        <h3 style="margin:0;">Connect Shopify Store</h3>
+                    </div>
+                    <button style="background:none; border:none; color:#888; font-size:24px; cursor:pointer;" onclick="closeModal('shopifyModal')">×</button>
+                </div>
+
+                <div id="shopifyConnectForm">
+                    <p style="color:#888; font-size:13px; margin-bottom:20px;">Connect your Shopify store to import products and sync content.</p>
+
+                    <div style="margin-bottom:15px;">
+                        <label style="display:block; font-size:12px; color:#888; margin-bottom:6px;">Store URL</label>
+                        <div style="display:flex; align-items:center; gap:0;">
+                            <input type="text" id="shopifyStoreUrl" placeholder="your-store" style="flex:1; background:rgba(0,0,0,0.3); border:1px solid #333; border-radius:8px 0 0 8px; padding:12px; color:white; font-size:14px;">
+                            <span style="background:rgba(0,0,0,0.5); border:1px solid #333; border-left:none; border-radius:0 8px 8px 0; padding:12px; color:#888; font-size:14px;">.myshopify.com</span>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom:20px;">
+                        <label style="display:block; font-size:12px; color:#888; margin-bottom:6px;">Admin API Access Token</label>
+                        <input type="password" id="shopifyAccessToken" placeholder="shpat_xxxxxxxxxxxxxxxx" style="width:100%; background:rgba(0,0,0,0.3); border:1px solid #333; border-radius:8px; padding:12px; color:white; font-size:14px;">
+                    </div>
+
+                    <div style="background:rgba(150,191,72,0.1); border:1px solid rgba(150,191,72,0.3); border-radius:8px; padding:12px; margin-bottom:20px;">
+                        <div style="font-size:12px; color:#96bf48; font-weight:600; margin-bottom:5px;">📋 How to get your Access Token:</div>
+                        <ol style="font-size:11px; color:#888; margin:0; padding-left:15px; line-height:1.6;">
+                            <li>Go to Shopify Admin → Settings → Apps</li>
+                            <li>Click "Develop apps" → Create an app</li>
+                            <li>Configure Admin API scopes: <code style="background:#333; padding:2px 4px; border-radius:3px;">read_products</code></li>
+                            <li>Install app and copy the Access Token</li>
+                        </ol>
+                    </div>
+
+                    <div style="display:flex; gap:10px;">
+                        <button class="confirm-btn cancel" style="flex:1;" onclick="closeModal('shopifyModal')">Cancel</button>
+                        <button class="confirm-btn primary" style="flex:1; background:linear-gradient(135deg, #96bf48, #5a8f29);" onclick="connectShopify()">Connect Shopify</button>
+                    </div>
+                </div>
+
+                <div id="shopifyConnectedView" style="display:none;">
+                    <div style="text-align:center; padding:20px 0;">
+                        <div style="width:60px; height:60px; background:rgba(150,191,72,0.2); border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 15px; font-size:28px;">✓</div>
+                        <h4 style="color:white; margin-bottom:5px;">Shopify Store Connected!</h4>
+                        <p style="color:#888; font-size:13px;" id="shopifyStoreName">your-store.myshopify.com</p>
+                    </div>
+
+                    <div style="background:rgba(255,255,255,0.05); border-radius:8px; padding:15px; margin-bottom:15px;">
+                        <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                            <span style="color:#888; font-size:12px;">Status</span>
+                            <span style="color:#96bf48; font-size:12px; font-weight:600;">● Connected</span>
+                        </div>
+                        <div style="display:flex; justify-content:space-between;">
+                            <span style="color:#888; font-size:12px;">Products Synced</span>
+                            <span style="color:white; font-size:12px;" id="shopifyProductCount">0</span>
+                        </div>
+                    </div>
+
+                    <button class="confirm-btn primary" style="width:100%; margin-bottom:10px; background:linear-gradient(135deg, #96bf48, #5a8f29);" onclick="refreshShopifyProducts()">
+                        🔄 Refresh Products
+                    </button>
+
+                    <div style="display:flex; gap:10px;">
+                        <button class="confirm-btn cancel" style="flex:1;" onclick="disconnectShopify()">Disconnect</button>
+                        <button class="confirm-btn primary" style="flex:1;" onclick="closeModal('shopifyModal')">Done</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div id="oauthModal" class="oauth-modal hidden">
             <div class="oauth-box">
-                <img src="https://cdn.shopify.com/s/assets/external/favicon-96-1674641025.png" width="40" style="margin-bottom:10px;">
-                <h3>Connecting to Shopify...</h3>
                 <div class="oauth-spinner"></div>
+                <h3 id="oauthTitle">Connecting...</h3>
             </div>
         </div>
 
@@ -6511,13 +6583,248 @@
         // Alias for auth.js compatibility
         const originalNavigateTo = navigateTo;
 
-        // Shopify Connect Flow
+        // ============ SHOPIFY INTEGRATION ============
+        var shopifyConnected = false;
+        var shopifyCredentials = null;
+        var shopifyProducts = [];
+
+        // Check if Shopify is connected on load
+        function checkShopifyConnection() {
+            const saved = localStorage.getItem('shopify_credentials');
+            if (saved) {
+                try {
+                    shopifyCredentials = JSON.parse(saved);
+                    shopifyConnected = true;
+                    updateShopifyUI(true);
+                    // Auto-refresh products
+                    refreshShopifyProducts();
+                } catch(e) {
+                    console.error('Error parsing Shopify credentials:', e);
+                }
+            }
+        }
+
+        // Open Shopify modal
         function startShopifyConnect() {
-            document.getElementById('oauthModal').classList.remove('hidden');
-            setTimeout(() => {
-                document.getElementById('oauthModal').classList.add('hidden');
+            openModal('shopifyModal');
+        }
+
+        // Connect Shopify Store
+        async function connectShopify() {
+            const storeUrl = document.getElementById('shopifyStoreUrl').value.trim();
+            const accessToken = document.getElementById('shopifyAccessToken').value.trim();
+
+            if (!storeUrl || !accessToken) {
+                showToast('error', 'Missing Fields', 'Please fill in all credentials');
+                return;
+            }
+
+            // Show loading state
+            const btn = event.target;
+            btn.disabled = true;
+            btn.innerHTML = '⏳ Connecting...';
+
+            try {
+                // Verify credentials by fetching shop info
+                const response = await fetch('/api/shopify-products', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        storeUrl: storeUrl,
+                        accessToken: accessToken,
+                        action: 'verify'
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
+                // Store credentials
+                shopifyCredentials = {
+                    storeUrl: storeUrl,
+                    accessToken: accessToken,
+                    shopName: data.shopName || storeUrl,
+                    connectedAt: new Date().toISOString()
+                };
+
+                localStorage.setItem('shopify_credentials', JSON.stringify(shopifyCredentials));
+                shopifyConnected = true;
+                updateShopifyUI(true);
+
+                // Show connected view
+                document.getElementById('shopifyConnectForm').style.display = 'none';
+                document.getElementById('shopifyConnectedView').style.display = 'block';
+                document.getElementById('shopifyStoreName').textContent = shopifyCredentials.storeUrl + '.myshopify.com';
+
+                // Fetch products
+                await refreshShopifyProducts();
+
+                showToast('success', 'Shopify Connected!', 'Your products are now synced');
+
+                // Transform generator UI
                 transformToIntegratedMode();
-            }, 1500);
+
+            } catch (error) {
+                console.error('Shopify connection error:', error);
+                showToast('error', 'Connection Failed', error.message || 'Could not connect to Shopify');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = 'Connect Shopify';
+            }
+        }
+
+        // Disconnect Shopify Store
+        function disconnectShopify() {
+            localStorage.removeItem('shopify_credentials');
+            shopifyCredentials = null;
+            shopifyConnected = false;
+            shopifyProducts = [];
+
+            updateShopifyUI(false);
+
+            // Reset modal
+            document.getElementById('shopifyConnectForm').style.display = 'block';
+            document.getElementById('shopifyConnectedView').style.display = 'none';
+            document.getElementById('shopifyStoreUrl').value = '';
+            document.getElementById('shopifyAccessToken').value = '';
+
+            // Reset generator UI
+            document.getElementById('connectContainer').innerHTML = `
+                <button class="connect-btn shopify" onclick="startShopifyConnect()">
+                    <svg style="width:16px; height:16px;" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M15.337 23.979l7.216-1.561s-2.604-17.613-2.625-17.758c-.018-.143-.156-.247-.282-.247s-.26.011-.26.011-.479-.138-1.197-.375c-.11-.433-.305-.951-.552-1.407-.747-1.375-1.826-2.063-3.131-2.063-.091 0-.183.006-.276.015-.041-.048-.083-.095-.126-.141-.574-.603-1.312-.89-2.192-.848-1.713.079-3.415 1.291-4.789 3.411-.968 1.491-1.703 3.37-1.912 4.823l-3.214.995c-.947.297-1.001.327-1.127 1.226-.095.678-2.57 19.819-2.57 19.819l18.037 3.1z"/>
+                    </svg>
+                    <span>Connect Shopify</span>
+                    <span style="font-size:10px; padding:2px 6px; background:rgba(255,255,255,0.1); border-radius:4px; margin-left:5px;">Recommended</span>
+                </button>`;
+
+            // Hide sidebar
+            document.getElementById('inventorySidebar').classList.remove('active');
+
+            closeModal('shopifyModal');
+            showToast('info', 'Disconnected', 'Shopify Store has been disconnected');
+        }
+
+        // Refresh products from Shopify
+        async function refreshShopifyProducts() {
+            if (!shopifyConnected || !shopifyCredentials) {
+                showToast('error', 'Not Connected', 'Please connect your Shopify store first');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/shopify-products', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        storeUrl: shopifyCredentials.storeUrl,
+                        accessToken: shopifyCredentials.accessToken,
+                        action: 'products'
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
+                shopifyProducts = data.products || [];
+                document.getElementById('shopifyProductCount').textContent = shopifyProducts.length;
+
+                // Update product sidebar
+                renderShopifyProducts();
+
+                showToast('success', 'Products Synced', `${shopifyProducts.length} products loaded`);
+
+            } catch (error) {
+                console.error('Error fetching products:', error);
+                showToast('error', 'Sync Failed', error.message || 'Could not fetch products');
+            }
+        }
+
+        // Render Shopify products in sidebar
+        function renderShopifyProducts() {
+            const container = document.querySelector('.product-list');
+            if (!container) return;
+
+            if (shopifyProducts.length === 0) {
+                container.innerHTML = `
+                    <div style="padding:20px; text-align:center; color:#888; font-size:13px;">
+                        No products found in your store
+                    </div>`;
+                return;
+            }
+
+            container.innerHTML = shopifyProducts.map(product => `
+                <div class="product-card" onclick="selectShopifyProduct('${product.id}')" style="cursor:pointer;">
+                    <div class="product-thumb" style="background-image:url('${product.image || ''}');"></div>
+                    <div class="product-info">
+                        <div class="product-name">${product.title}</div>
+                        <div class="product-sku">$${product.price || '0.00'}</div>
+                    </div>
+                    <div class="product-status in-stock">In Stock</div>
+                </div>
+            `).join('');
+        }
+
+        // Select a Shopify product to auto-fill the generator
+        function selectShopifyProduct(productId) {
+            const product = shopifyProducts.find(p => p.id === productId || p.id.toString() === productId);
+            if (!product) return;
+
+            // Fill product name
+            const nameInput = document.getElementById('productName');
+            if (nameInput) nameInput.value = product.title;
+
+            // Fill product description
+            const descInput = document.getElementById('productDesc');
+            if (descInput) {
+                // Strip HTML from description
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = product.description || '';
+                descInput.value = tempDiv.textContent || tempDiv.innerText || '';
+            }
+
+            // Update uploaded images with product images
+            if (product.images && product.images.length > 0) {
+                uploadedFiles = product.images.map(img => ({
+                    name: 'shopify-product-image',
+                    preview: img,
+                    isShopifyImage: true
+                }));
+                updateImagePreview();
+            }
+
+            showToast('success', 'Product Selected', `"${product.title}" loaded into generator`);
+        }
+
+        // Update Shopify UI elements
+        function updateShopifyUI(connected) {
+            // Update settings integration card if exists
+            const statusEl = document.getElementById('shopifyStatus');
+            const btnEl = document.getElementById('shopifyConnectBtn');
+
+            if (statusEl) statusEl.textContent = connected ? 'Connected' : 'Not Connected';
+            if (statusEl) statusEl.style.color = connected ? '#96bf48' : '#888';
+            if (btnEl) {
+                btnEl.textContent = connected ? 'Manage' : 'Connect';
+                btnEl.style.background = connected ? 'rgba(150,191,72,0.2)' : '';
+                btnEl.style.borderColor = connected ? '#96bf48' : '';
+            }
+
+            // Update modal view based on connection status
+            if (connected && shopifyCredentials) {
+                document.getElementById('shopifyConnectForm').style.display = 'none';
+                document.getElementById('shopifyConnectedView').style.display = 'block';
+                document.getElementById('shopifyStoreName').textContent = shopifyCredentials.storeUrl + '.myshopify.com';
+            } else {
+                document.getElementById('shopifyConnectForm').style.display = 'block';
+                document.getElementById('shopifyConnectedView').style.display = 'none';
+            }
         }
 
         function transformToIntegratedMode() {
@@ -6535,8 +6842,6 @@
                 <div style="background:rgba(150, 191, 72, 0.1); border:1px solid #96bf48; padding:15px; border-radius:8px; color:#96bf48; font-size:13px; text-align:center;">
                     ✓ Images synced automatically from Product Page
                 </div>`;
-
-            alert("Success! Your inventory is loaded.");
         }
 
         // ============ TIKTOK SHOP INTEGRATION ============
@@ -6676,9 +6981,10 @@
             }
         }
 
-        // Initialize TikTok on page load
+        // Initialize integrations on page load
         document.addEventListener('DOMContentLoaded', function() {
             checkTikTokConnection();
+            checkShopifyConnection();
         });
 
         function fillForm(name, desc, val, unit) {
