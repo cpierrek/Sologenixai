@@ -9229,13 +9229,16 @@
         var userCredits = 100; // Default credits
         var maxCredits = 100;
 
-        // Credit costs
+        // Credit costs (balanced for 100 starting credits)
         var CREDIT_COSTS = {
-            image: 5,      // Per image
-            video: 20,     // Per video
-            script: 2,     // Per script
-            voice: 3       // Per voice generation
+            image: 2,      // Per image (9 images = 18 credits)
+            video: 8,      // Per video (3 videos = 24 credits)
+            script: 1,     // Per script (3 scripts = 3 credits)
+            voice: 1       // Per voice (3 voices = 3 credits)
         };
+        // Full bundle = 18 + 24 + 3 + 3 = 48 credits
+        // Images only = 18 + 3 + 3 = 24 credits
+        // Videos only = 24 + 3 + 3 = 30 credits
 
         // Load user credits from Supabase
         async function loadUserCredits() {
