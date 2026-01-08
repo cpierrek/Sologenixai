@@ -3644,34 +3644,26 @@
                 </div>
 
                 <div id="shopifyConnectForm">
-                    <p style="color:#888; font-size:13px; margin-bottom:20px;">Connect your Shopify store to import products and sync content.</p>
+                    <p style="color:#888; font-size:13px; margin-bottom:20px;">Connect your Shopify store to import products automatically.</p>
 
-                    <div style="margin-bottom:15px;">
-                        <label style="display:block; font-size:12px; color:#888; margin-bottom:6px;">Store URL</label>
+                    <div style="margin-bottom:20px;">
+                        <label style="display:block; font-size:12px; color:#888; margin-bottom:6px;">Your Store URL</label>
                         <div style="display:flex; align-items:center; gap:0;">
                             <input type="text" id="shopifyStoreUrl" placeholder="your-store" style="flex:1; background:rgba(0,0,0,0.3); border:1px solid #333; border-radius:8px 0 0 8px; padding:12px; color:white; font-size:14px;">
                             <span style="background:rgba(0,0,0,0.5); border:1px solid #333; border-left:none; border-radius:0 8px 8px 0; padding:12px; color:#888; font-size:14px;">.myshopify.com</span>
                         </div>
                     </div>
 
-                    <div style="margin-bottom:20px;">
-                        <label style="display:block; font-size:12px; color:#888; margin-bottom:6px;">Admin API Access Token</label>
-                        <input type="password" id="shopifyAccessToken" placeholder="shpat_xxxxxxxxxxxxxxxx" style="width:100%; background:rgba(0,0,0,0.3); border:1px solid #333; border-radius:8px; padding:12px; color:white; font-size:14px;">
-                    </div>
-
                     <div style="background:rgba(150,191,72,0.1); border:1px solid rgba(150,191,72,0.3); border-radius:8px; padding:12px; margin-bottom:20px;">
-                        <div style="font-size:12px; color:#96bf48; font-weight:600; margin-bottom:5px;">📋 How to get your Access Token:</div>
-                        <ol style="font-size:11px; color:#888; margin:0; padding-left:15px; line-height:1.6;">
-                            <li>Go to Shopify Admin → Settings → Apps</li>
-                            <li>Click "Develop apps" → Create an app</li>
-                            <li>Configure Admin API scopes: <code style="background:#333; padding:2px 4px; border-radius:3px;">read_products</code></li>
-                            <li>Install app and copy the Access Token</li>
-                        </ol>
+                        <div style="font-size:12px; color:#96bf48; margin-bottom:5px;">🔒 Secure OAuth Connection</div>
+                        <p style="font-size:11px; color:#888; margin:0; line-height:1.5;">You'll be redirected to Shopify to authorize SoloGenix. We only request read access to your products.</p>
                     </div>
 
                     <div style="display:flex; gap:10px;">
                         <button class="confirm-btn cancel" style="flex:1;" onclick="closeModal('shopifyModal')">Cancel</button>
-                        <button class="confirm-btn primary" style="flex:1; background:linear-gradient(135deg, #96bf48, #5a8f29);" onclick="connectShopify()">Connect Shopify</button>
+                        <button class="confirm-btn primary" style="flex:1; background:linear-gradient(135deg, #96bf48, #5a8f29);" onclick="startShopifyOAuth()">
+                            🔗 Connect with Shopify
+                        </button>
                     </div>
                 </div>
 
@@ -6609,70 +6601,70 @@
             openModal('shopifyModal');
         }
 
-        // Connect Shopify Store
-        async function connectShopify() {
+        // Start OAuth flow - redirect to Shopify authorization
+        function startShopifyOAuth() {
             const storeUrl = document.getElementById('shopifyStoreUrl').value.trim();
-            const accessToken = document.getElementById('shopifyAccessToken').value.trim();
 
-            if (!storeUrl || !accessToken) {
-                showToast('error', 'Missing Fields', 'Please fill in all credentials');
+            if (!storeUrl) {
+                showToast('error', 'Missing Store', 'Please enter your store name');
                 return;
             }
 
-            // Show loading state
-            const btn = event.target;
-            btn.disabled = true;
-            btn.innerHTML = '⏳ Connecting...';
+            // Redirect to OAuth endpoint
+            window.location.href = `/api/shopify-auth?shop=${encodeURIComponent(storeUrl)}`;
+        }
 
-            try {
-                // Verify credentials by fetching shop info
-                const response = await fetch('/api/shopify-products', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        storeUrl: storeUrl,
-                        accessToken: accessToken,
-                        action: 'verify'
-                    })
-                });
-
-                const data = await response.json();
-
-                if (data.error) {
-                    throw new Error(data.error);
-                }
-
-                // Store credentials
-                shopifyCredentials = {
-                    storeUrl: storeUrl,
-                    accessToken: accessToken,
-                    shopName: data.shopName || storeUrl,
-                    connectedAt: new Date().toISOString()
+        // Handle OAuth callback - called on page load
+        function handleShopifyOAuthCallback() {
+            // Check URL params for errors
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('shopify_error')) {
+                const errorMap = {
+                    'missing_params': 'Authorization failed - missing parameters',
+                    'config_error': 'Server configuration error',
+                    'token_failed': 'Failed to get access token',
+                    'server_error': 'Server error occurred'
                 };
+                showToast('error', 'Connection Failed', errorMap[urlParams.get('shopify_error')] || 'Unknown error');
+                // Clean URL
+                window.history.replaceState({}, document.title, window.location.pathname);
+                return;
+            }
 
-                localStorage.setItem('shopify_credentials', JSON.stringify(shopifyCredentials));
-                shopifyConnected = true;
-                updateShopifyUI(true);
+            // Check URL fragment for token (after successful OAuth)
+            if (window.location.hash && window.location.hash.includes('shopify_token')) {
+                const fragment = window.location.hash.substring(1);
+                const params = new URLSearchParams(fragment);
 
-                // Show connected view
-                document.getElementById('shopifyConnectForm').style.display = 'none';
-                document.getElementById('shopifyConnectedView').style.display = 'block';
-                document.getElementById('shopifyStoreName').textContent = shopifyCredentials.storeUrl + '.myshopify.com';
+                const token = params.get('shopify_token');
+                const shop = params.get('shopify_shop');
+                const shopName = params.get('shopify_name');
 
-                // Fetch products
-                await refreshShopifyProducts();
+                if (token && shop) {
+                    // Store credentials
+                    shopifyCredentials = {
+                        storeUrl: shop.replace('.myshopify.com', ''),
+                        accessToken: token,
+                        shopName: decodeURIComponent(shopName || shop),
+                        shopDomain: shop,
+                        connectedAt: new Date().toISOString()
+                    };
 
-                showToast('success', 'Shopify Connected!', 'Your products are now synced');
+                    localStorage.setItem('shopify_credentials', JSON.stringify(shopifyCredentials));
+                    shopifyConnected = true;
 
-                // Transform generator UI
-                transformToIntegratedMode();
+                    // Clean URL (remove token from visible URL for security)
+                    window.history.replaceState({}, document.title, window.location.pathname);
 
-            } catch (error) {
-                console.error('Shopify connection error:', error);
-                showToast('error', 'Connection Failed', error.message || 'Could not connect to Shopify');
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = 'Connect Shopify';
+                    // Update UI
+                    updateShopifyUI(true);
+                    transformToIntegratedMode();
+
+                    // Fetch products
+                    refreshShopifyProducts();
+
+                    showToast('success', 'Shopify Connected!', `Connected to ${decodeURIComponent(shopName || shop)}`);
+                }
             }
         }
 
@@ -6985,6 +6977,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             checkTikTokConnection();
             checkShopifyConnection();
+            handleShopifyOAuthCallback();
         });
 
         function fillForm(name, desc, val, unit) {
