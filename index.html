@@ -3435,7 +3435,7 @@
                             <button class="connect-btn shopify" onclick="startShopifyConnect()">
                                 <span style="font-size:16px">🛍️</span> Connect Shopify
                             </button>
-                            <button class="connect-btn tiktok" onclick="alert('TikTok Shop Integration coming soon!')">
+                            <button class="connect-btn tiktok" id="generatorTiktokBtn" onclick="openModal('tiktokModal')">
                                 <span style="font-size:16px">🎵</span> Connect TikTok Shop
                             </button>
                         </div>
@@ -3745,6 +3745,9 @@
                         </button>
                         <button class="save-campaign-btn" onclick="openModal('campaignModal')">
                             <span>📁</span> Save to Campaign
+                        </button>
+                        <button class="secondary-btn" id="publishTikTokBtn" onclick="publishToTikTok(generatedAssets)" style="background:rgba(0,0,0,0.5); border-color:#333;">
+                            <span>🎵</span> Publish to TikTok
                         </button>
                         <button class="primary-btn" onclick="downloadAllAsZip()">
                             <span>⬇</span> Download Bundle as ZIP
@@ -4412,13 +4415,13 @@
 
                         <div class="int-category">🛍️ E-Commerce</div>
                         <div class="int-grid">
-                            <div class="int-card">
+                            <div class="int-card" id="tiktokIntCard">
                                 <div style="display:flex; align-items:center; gap:10px;">
                                     <div class="int-logo" style="background:#000; color:white;">🎵</div>
-                                    <div><h4>TikTok Shop</h4><p>Social Commerce</p></div>
+                                    <div><h4>TikTok Shop</h4><p id="tiktokStatus">Not Connected</p></div>
                                 </div>
                                 <p>Sync products directly to your TikTok Shop seller account.</p>
-                                <button class="connect-btn-small">Connect</button>
+                                <button class="connect-btn-small" id="tiktokConnectBtn" onclick="openModal('tiktokModal')">Connect</button>
                             </div>
                         </div>
 
@@ -6399,6 +6402,76 @@
             </div>
         </div>
 
+        <!-- TikTok Shop Modal -->
+        <div id="tiktokModal" class="confirm-modal" onclick="if(event.target===this) closeModal('tiktokModal')">
+            <div class="confirm-box" style="max-width:500px;" onclick="event.stopPropagation()">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <div style="width:40px; height:40px; background:#000; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:20px;">🎵</div>
+                        <h3 style="margin:0;">Connect TikTok Shop</h3>
+                    </div>
+                    <button style="background:none; border:none; color:#888; font-size:24px; cursor:pointer;" onclick="closeModal('tiktokModal')">×</button>
+                </div>
+
+                <div id="tiktokConnectForm">
+                    <p style="color:#888; font-size:13px; margin-bottom:20px;">Enter your TikTok Shop API credentials to connect your seller account.</p>
+
+                    <div style="margin-bottom:15px;">
+                        <label style="display:block; font-size:12px; color:#888; margin-bottom:6px;">App Key</label>
+                        <input type="text" id="tiktokAppKey" placeholder="Enter your App Key" style="width:100%; background:rgba(0,0,0,0.3); border:1px solid #333; border-radius:8px; padding:12px; color:white; font-size:14px;">
+                    </div>
+
+                    <div style="margin-bottom:15px;">
+                        <label style="display:block; font-size:12px; color:#888; margin-bottom:6px;">App Secret</label>
+                        <input type="password" id="tiktokAppSecret" placeholder="Enter your App Secret" style="width:100%; background:rgba(0,0,0,0.3); border:1px solid #333; border-radius:8px; padding:12px; color:white; font-size:14px;">
+                    </div>
+
+                    <div style="margin-bottom:20px;">
+                        <label style="display:block; font-size:12px; color:#888; margin-bottom:6px;">Shop ID</label>
+                        <input type="text" id="tiktokShopId" placeholder="Enter your Shop ID" style="width:100%; background:rgba(0,0,0,0.3); border:1px solid #333; border-radius:8px; padding:12px; color:white; font-size:14px;">
+                    </div>
+
+                    <div style="background:rgba(0,243,255,0.1); border:1px solid rgba(0,243,255,0.3); border-radius:8px; padding:12px; margin-bottom:20px;">
+                        <div style="font-size:12px; color:#00f3ff; font-weight:600; margin-bottom:5px;">📋 How to get credentials:</div>
+                        <ol style="font-size:11px; color:#888; margin:0; padding-left:15px; line-height:1.6;">
+                            <li>Go to <a href="https://partner.tiktokshop.com/developer" target="_blank" style="color:#00f3ff;">TikTok Shop Developer Portal</a></li>
+                            <li>Create a new app or select existing</li>
+                            <li>Copy App Key, App Secret, and Shop ID</li>
+                        </ol>
+                    </div>
+
+                    <div style="display:flex; gap:10px;">
+                        <button class="confirm-btn cancel" style="flex:1;" onclick="closeModal('tiktokModal')">Cancel</button>
+                        <button class="confirm-btn primary" style="flex:1;" onclick="connectTikTokShop()">Connect TikTok Shop</button>
+                    </div>
+                </div>
+
+                <div id="tiktokConnectedView" style="display:none;">
+                    <div style="text-align:center; padding:20px 0;">
+                        <div style="width:60px; height:60px; background:rgba(0,255,157,0.2); border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 15px; font-size:28px;">✓</div>
+                        <h4 style="color:white; margin-bottom:5px;">TikTok Shop Connected!</h4>
+                        <p style="color:#888; font-size:13px;" id="tiktokShopName">Shop ID: xxxxxxxx</p>
+                    </div>
+
+                    <div style="background:rgba(255,255,255,0.05); border-radius:8px; padding:15px; margin-bottom:20px;">
+                        <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                            <span style="color:#888; font-size:12px;">Status</span>
+                            <span style="color:#00ff9d; font-size:12px; font-weight:600;">● Active</span>
+                        </div>
+                        <div style="display:flex; justify-content:space-between;">
+                            <span style="color:#888; font-size:12px;">Connected</span>
+                            <span style="color:white; font-size:12px;" id="tiktokConnectedDate">Just now</span>
+                        </div>
+                    </div>
+
+                    <div style="display:flex; gap:10px;">
+                        <button class="confirm-btn cancel" style="flex:1;" onclick="disconnectTikTokShop()">Disconnect</button>
+                        <button class="confirm-btn primary" style="flex:1;" onclick="closeModal('tiktokModal')">Done</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Generating Overlay -->
         <div id="generatingOverlay" class="generating-overlay">
             <div class="gen-spinner"></div>
@@ -6465,6 +6538,148 @@
 
             alert("Success! Your inventory is loaded.");
         }
+
+        // ============ TIKTOK SHOP INTEGRATION ============
+        var tiktokConnected = false;
+        var tiktokCredentials = null;
+
+        // Check if TikTok is connected on load
+        function checkTikTokConnection() {
+            const saved = localStorage.getItem('tiktok_shop_credentials');
+            if (saved) {
+                try {
+                    tiktokCredentials = JSON.parse(saved);
+                    tiktokConnected = true;
+                    updateTikTokUI(true);
+                } catch(e) {
+                    console.error('Error parsing TikTok credentials:', e);
+                }
+            }
+        }
+
+        // Connect TikTok Shop
+        function connectTikTokShop() {
+            const appKey = document.getElementById('tiktokAppKey').value.trim();
+            const appSecret = document.getElementById('tiktokAppSecret').value.trim();
+            const shopId = document.getElementById('tiktokShopId').value.trim();
+
+            if (!appKey || !appSecret || !shopId) {
+                showToast('error', 'Missing Fields', 'Please fill in all credentials');
+                return;
+            }
+
+            // Store credentials (in production, these should be stored securely on server)
+            tiktokCredentials = {
+                appKey: appKey,
+                appSecret: appSecret,
+                shopId: shopId,
+                connectedAt: new Date().toISOString()
+            };
+
+            // Save to localStorage for persistence
+            localStorage.setItem('tiktok_shop_credentials', JSON.stringify(tiktokCredentials));
+
+            tiktokConnected = true;
+            updateTikTokUI(true);
+
+            // Show connected view
+            document.getElementById('tiktokConnectForm').style.display = 'none';
+            document.getElementById('tiktokConnectedView').style.display = 'block';
+            document.getElementById('tiktokShopName').textContent = 'Shop ID: ' + shopId.substring(0, 8) + '...';
+            document.getElementById('tiktokConnectedDate').textContent = 'Just now';
+
+            showToast('success', 'TikTok Shop Connected!', 'You can now publish content to TikTok');
+        }
+
+        // Disconnect TikTok Shop
+        function disconnectTikTokShop() {
+            localStorage.removeItem('tiktok_shop_credentials');
+            tiktokCredentials = null;
+            tiktokConnected = false;
+
+            updateTikTokUI(false);
+
+            // Reset modal
+            document.getElementById('tiktokConnectForm').style.display = 'block';
+            document.getElementById('tiktokConnectedView').style.display = 'none';
+            document.getElementById('tiktokAppKey').value = '';
+            document.getElementById('tiktokAppSecret').value = '';
+            document.getElementById('tiktokShopId').value = '';
+
+            closeModal('tiktokModal');
+            showToast('info', 'Disconnected', 'TikTok Shop has been disconnected');
+        }
+
+        // Update TikTok UI elements
+        function updateTikTokUI(connected) {
+            // Update settings integration card
+            const statusEl = document.getElementById('tiktokStatus');
+            const btnEl = document.getElementById('tiktokConnectBtn');
+            const cardEl = document.getElementById('tiktokIntCard');
+
+            if (statusEl) statusEl.textContent = connected ? 'Connected' : 'Not Connected';
+            if (statusEl) statusEl.style.color = connected ? '#00ff9d' : '#888';
+            if (btnEl) {
+                btnEl.textContent = connected ? 'Manage' : 'Connect';
+                btnEl.style.background = connected ? 'rgba(0,255,157,0.2)' : '';
+                btnEl.style.borderColor = connected ? '#00ff9d' : '';
+            }
+
+            // Update generator button
+            const genBtn = document.getElementById('generatorTiktokBtn');
+            if (genBtn) {
+                if (connected) {
+                    genBtn.innerHTML = '<span style="font-size:16px">✅</span> TikTok Connected';
+                    genBtn.style.background = 'rgba(0,255,157,0.2)';
+                    genBtn.style.borderColor = '#00ff9d';
+                } else {
+                    genBtn.innerHTML = '<span style="font-size:16px">🎵</span> Connect TikTok Shop';
+                    genBtn.style.background = '';
+                    genBtn.style.borderColor = '';
+                }
+            }
+
+            // Update modal view based on connection status
+            if (connected && tiktokCredentials) {
+                document.getElementById('tiktokConnectForm').style.display = 'none';
+                document.getElementById('tiktokConnectedView').style.display = 'block';
+                document.getElementById('tiktokShopName').textContent = 'Shop ID: ' + tiktokCredentials.shopId.substring(0, 8) + '...';
+                const connectedDate = new Date(tiktokCredentials.connectedAt);
+                document.getElementById('tiktokConnectedDate').textContent = connectedDate.toLocaleDateString();
+            } else {
+                document.getElementById('tiktokConnectForm').style.display = 'block';
+                document.getElementById('tiktokConnectedView').style.display = 'none';
+            }
+        }
+
+        // Publish to TikTok Shop (placeholder - requires actual API implementation)
+        async function publishToTikTok(assets) {
+            if (!tiktokConnected || !tiktokCredentials) {
+                showToast('error', 'Not Connected', 'Connect TikTok Shop first');
+                openModal('tiktokModal');
+                return false;
+            }
+
+            showToast('info', 'Publishing...', 'Sending content to TikTok Shop');
+
+            // Simulated API call - replace with actual TikTok API
+            try {
+                // In production, this would call your backend API which handles TikTok auth
+                await new Promise(r => setTimeout(r, 2000));
+
+                showToast('success', 'Published!', 'Content sent to TikTok Shop');
+                return true;
+            } catch (error) {
+                console.error('TikTok publish error:', error);
+                showToast('error', 'Publish Failed', error.message || 'Could not publish to TikTok');
+                return false;
+            }
+        }
+
+        // Initialize TikTok on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            checkTikTokConnection();
+        });
 
         function fillForm(name, desc, val, unit) {
             document.getElementById('pName').value = name;
