@@ -10,7 +10,8 @@ export default async function handler(req, res) {
             return res.status(400).json({ error: 'Store URL and Access Token are required' });
         }
 
-        const shopifyDomain = `${storeUrl}.myshopify.com`;
+        // Handle both formats: "store-name" and "store-name.myshopify.com"
+        const shopifyDomain = storeUrl.includes('.myshopify.com') ? storeUrl : `${storeUrl}.myshopify.com`;
         const headers = {
             'X-Shopify-Access-Token': accessToken,
             'Content-Type': 'application/json'
@@ -79,4 +80,3 @@ export default async function handler(req, res) {
         return res.status(500).json({ error: error.message || 'Shopify API failed' });
     }
 }
-
